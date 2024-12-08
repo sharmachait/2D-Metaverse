@@ -29,8 +29,7 @@ public class AppConfig {
     AuthEntryPointJwt unauthorizedHandler;
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        http.sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth->{
                     auth.requestMatchers("/api/**").authenticated()
                             .anyRequest().permitAll();
@@ -38,7 +37,11 @@ public class AppConfig {
                 .addFilterBefore(new JwtTokenValidatorFilter(), BasicAuthenticationFilter.class)
                 .csrf(csrf -> csrf.disable())
                 .cors(cors->cors.configurationSource(corsConfigurationSource()));
-        http.exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedHandler));
+        http.exceptionHandling(ex -> {
+            ex.authenticationEntryPoint((request, response, authException) -> response.sendError(401, "Unauthorized"));
+            ex.accessDeniedHandler((request, response, authException) -> response.sendError(403, "Forbidden"));
+        });
+//        http.exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedHandler));
         return http.build();
     }
     private CorsConfigurationSource corsConfigurationSource() {
