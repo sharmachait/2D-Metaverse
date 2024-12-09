@@ -4,17 +4,10 @@ import lombok.*;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Setter
-@Getter
+@Data
 public class AuthResponse {
     private String jwt;
-    private boolean status = false;
+    private Boolean status=false;
     private String message;
-    public String setMessage(){
-        return message;
-    }
-    public void setMessage(String message){
-        this.message = message;
-    }
     private String session = null;
 }

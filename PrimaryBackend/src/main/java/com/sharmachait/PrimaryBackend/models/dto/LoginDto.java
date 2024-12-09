@@ -1,11 +1,11 @@
 package com.sharmachait.PrimaryBackend.models.dto;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.sharmachait.PrimaryBackend.models.entity.Role;
+import lombok.Data;
 
-@Setter
-@Getter
+@Data
 public class LoginDto {
     private String username;
     private String password;
+    private Role role;
 }

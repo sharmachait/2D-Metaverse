@@ -13,6 +13,9 @@ public class UserServiceImpl implements UserService {
     UserRepository userRepository;
     @Override
     public User findByUsername(String username) throws NoSuchElementException {
+        if(username == null|| username.isBlank()||username.isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be null or empty");
+        }
         User user = userRepository.findByUsername(username);
         if (user == null) {
             throw new NoSuchElementException("No Such User");
@@ -22,6 +25,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User save(User user) {
-        return null;
+        return userRepository.save(user);
     }
 }

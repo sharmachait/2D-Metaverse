@@ -15,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,8 +32,17 @@ public class AuthController {
     UserService userService;
     @Autowired
     AuthenticationManager authManager;
+    @Autowired
+    PasswordEncoder passwordEncoder;
     @PostMapping("/signup")
-    public ResponseEntity<AuthResponse> register(@RequestBody User user){
+    public ResponseEntity<AuthResponse> register(@RequestBody LoginDto user){
+//        if(user.getUsername() == null|| user.getUsername().isBlank()||user.getPassword().isEmpty()){
+//            AuthResponse errorResponse = new AuthResponse();
+//            errorResponse.setMessage("Username cannot be null or empty");
+//            return ResponseEntity
+//                    .status(HttpStatus.BAD_REQUEST)
+//                    .body(errorResponse);
+//        }
         try {
             userService.findByUsername(user.getUsername());
             AuthResponse errorResponse = new AuthResponse();
@@ -40,11 +50,18 @@ public class AuthController {
             return ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .body(errorResponse);
+        } catch (IllegalArgumentException e) {
+            AuthResponse errorResponse = new AuthResponse();
+            errorResponse.setMessage(e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(errorResponse);
         }
-        catch (Exception e) {
+        catch (NoSuchElementException e) {
             User newUser = new User();
             newUser.setUsername(user.getUsername());
-            newUser.setPassword(user.getPassword());
+            newUser.setPassword(passwordEncoder.encode(user.getPassword()));
+            newUser.setRole(user.getRole());
             String auths = newUser.getRole().toString()+",";
             List<GrantedAuthority> authorities = AuthorityUtils.commaSeparatedStringToAuthorityList(auths);
             Authentication auth = new UsernamePasswordAuthenticationToken(user.getUsername(), null, authorities);
@@ -61,7 +78,7 @@ public class AuthController {
             authResponse.setJwt(jwt);
             authResponse.setStatus(true);
             authResponse.setMessage("User registered successfully");
-            User savedUser = userService.save(newUser);
+            userService.save(newUser);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(authResponse);
@@ -97,7 +114,7 @@ public class AuthController {
             authResponse.setStatus(true);
             authResponse.setMessage("Logged in successfully");
             return ResponseEntity
-                    .status(HttpStatus.CREATED)
+                    .status(HttpStatus.OK)
                     .body(authResponse);
         } catch (NoSuchElementException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
