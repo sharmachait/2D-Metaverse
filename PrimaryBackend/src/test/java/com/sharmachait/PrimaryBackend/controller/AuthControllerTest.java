@@ -134,4 +134,31 @@ class AuthControllerTest {
         assertEquals(response.getStatus(), true, "Status should match");
         assertEquals(response.getMessage(), "Logged in successfully", "Message should match");
     }
+
+    @Order(5)
+    @Test
+    @DisplayName("login user should fail for incorrect credentials")
+    void loginWrongPassword() {
+        //arrange
+        loginDto.setPassword(Math.random() + "");
+        WebClient webClient = WebClient.create();
+        //act
+        ClientResponse clientResponse = webClient.post()
+                .uri("http://localhost:" + serverPort + "/auth/signin")
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(loginDto)
+                .exchange()
+//                .bodyToMono(AuthResponse.class)
+                .block();
+        //assert
+        assertNotNull(clientResponse, "Response object should not be null");
+        assertEquals(clientResponse.statusCode(), HttpStatus.UNAUTHORIZED, "Status code should be 201 CREATED");
+
+        AuthResponse response = clientResponse.bodyToMono(AuthResponse.class).block();
+        assertNotNull(response, "Response object should not be null");
+        assertNull(response.getJwt());
+        assertEquals(response.getStatus(), false, "Status should match");
+        assertEquals(response.getMessage(), "Unauthorized", "Message should match");
+    }
 }
