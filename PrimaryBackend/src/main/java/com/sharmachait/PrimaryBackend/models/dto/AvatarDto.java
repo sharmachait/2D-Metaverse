@@ -7,4 +7,5 @@ public class AvatarDto {
     private String id;
     private String imageUrl;
     private String name;
+    private String userId;
 }

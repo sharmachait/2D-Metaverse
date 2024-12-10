@@ -25,7 +25,7 @@ class AuthControllerTest {
     @BeforeEach
     void setUp() {
         loginDto = new LoginDto();
-        loginDto.setUsername("John");
+        loginDto.setUsername("authcontroller");
         loginDto.setPassword("password");
         loginDto.setRole(Role.ROLE_USER);
     }

@@ -65,20 +65,21 @@ public class AuthController {
             String auths = newUser.getRole().toString()+",";
             List<GrantedAuthority> authorities = AuthorityUtils.commaSeparatedStringToAuthorityList(auths);
             Authentication auth = new UsernamePasswordAuthenticationToken(user.getUsername(), null, authorities);
+            newUser = userService.save(newUser);
             String jwt;
             try{
-                jwt = JwtProvider.generateToken(auth);
+                jwt = JwtProvider.generateToken(auth, newUser.getId());
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new AuthResponse(null,false,"Unauthorized",null));
+                        .body(new AuthResponse(null,false,"Unauthorized",null,null));
             }
             SecurityContextHolder.getContext().setAuthentication(auth);
             AuthResponse authResponse = new AuthResponse();
             authResponse.setJwt(jwt);
             authResponse.setStatus(true);
             authResponse.setMessage("User registered successfully");
-            userService.save(newUser);
+            authResponse.setUserId(newUser.getId());
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(authResponse);
@@ -97,16 +98,16 @@ public class AuthController {
                 );
             } catch (Exception e) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new AuthResponse(null,false,"Unauthorized",null));
+                        .body(new AuthResponse(null,false,"Unauthorized",null, savedUser.getId()));
             }
 
             String jwt;
             try{
-                jwt = JwtProvider.generateToken(auth);
+                jwt = JwtProvider.generateToken(auth, savedUser.getId());
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new AuthResponse(null,false,"Unauthorized",null));
+                        .body(new AuthResponse(null,false,"Unauthorized",null, null));
             }
             SecurityContextHolder.getContext().setAuthentication(auth);
             AuthResponse authResponse = new AuthResponse();
@@ -118,7 +119,7 @@ public class AuthController {
                     .body(authResponse);
         } catch (NoSuchElementException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new AuthResponse(null,false,"Unauthorized",null));
+                    .body(new AuthResponse(null,false,"Unauthorized",null,null));
         }
     }
 

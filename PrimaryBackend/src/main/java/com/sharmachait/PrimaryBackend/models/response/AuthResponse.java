@@ -10,4 +10,5 @@ public class AuthResponse {
     private Boolean status=false;
     private String message;
     private String session = null;
+    private String userId;
 }
