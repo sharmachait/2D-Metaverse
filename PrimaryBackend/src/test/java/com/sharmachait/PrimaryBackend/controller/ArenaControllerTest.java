@@ -3,16 +3,11 @@ package com.sharmachait.PrimaryBackend.controller;
 import com.sharmachait.PrimaryBackend.models.dto.*;
 import com.sharmachait.PrimaryBackend.models.entity.Role;
 import com.sharmachait.PrimaryBackend.models.response.AuthResponse;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -126,5 +121,103 @@ class ArenaControllerTest {
         ResponseEntity<SpaceDto> spacedto = restTemplate.postForEntity(url, spacerequest, SpaceDto.class);
         spaceId = spacedto.getBody().getId();
     }
+    @Order(1)
+    @Test
+    @DisplayName("Incorrect space id should throw 400")
+    void incorrectSpaceIdShouldReturn400() {
+        //arrange
+        String Spaceurl = "http://localhost:" + serverPort + "/api/v1/space/randombullshitid";
 
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("Authorization", "Bearer " + userToken);
+
+        HttpEntity<String> request = new HttpEntity<>(headers);
+        //act
+        ResponseEntity<SpaceDto> spaceResponse = restTemplate.exchange(
+                Spaceurl, HttpMethod.GET, request, SpaceDto.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, spaceResponse.getStatusCode(), "Expected a BAD_REQUEST status for valid token");
+        assertNull(spaceResponse.getBody(), "Space did not return null");
+    }
+    @Order(2)
+    @Test
+    @DisplayName("Correct space id should return 200")
+    void CorrectSpaceIdShouldReturn200() {
+        //arrange
+        String Spaceurl = "http://localhost:" + serverPort + "/api/v1/space/" + spaceId;
+
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("Authorization", "Bearer " + userToken);
+
+        HttpEntity<String> request = new HttpEntity<>(headers);
+        //act
+        ResponseEntity<SpaceDto> spaceResponse = restTemplate.exchange(
+                Spaceurl, HttpMethod.GET, request, SpaceDto.class);
+
+        assertEquals(HttpStatus.OK, spaceResponse.getStatusCode(), "Expected a OK status for valid token");
+        assertNotNull(spaceResponse.getBody(), "Space returned null");
+        assertEquals("100x200", spaceResponse.getBody().getDimensions());
+        assertEquals(4,spaceResponse.getBody().getElements().size());
+    }
+    @Order(3)
+    @Test
+    @DisplayName("Able to delete element")
+    void ableToDeleteElement() {
+        //arrange
+        String Spaceurl = "http://localhost:" + serverPort + "/api/v1/space/" + spaceId;
+
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("Authorization", "Bearer " + userToken);
+
+        HttpEntity<String> request = new HttpEntity<>(headers);
+        //act
+        ResponseEntity<SpaceDto> spaceResponse = restTemplate.exchange(
+                Spaceurl, HttpMethod.GET, request, SpaceDto.class);
+
+        String elementId = spaceResponse.getBody().getElements().get(0).getId();
+
+        Spaceurl = "http://localhost:" + serverPort + "/api/v1/space/element";
+
+        SpaceDto deleteDto = new SpaceDto();
+        deleteDto.setId(spaceId);
+        SpaceElementDto spaceelementtodelete = new SpaceElementDto();
+        spaceelementtodelete.setId(elementId);
+        deleteDto.setElements(List.of(spaceelementtodelete));
+        HttpEntity<SpaceDto> deleteRequest = new HttpEntity<>(deleteDto, headers);
+        //act
+        ResponseEntity<SpaceDto> deleteResponse = restTemplate.exchange(
+                Spaceurl, HttpMethod.DELETE, deleteRequest, SpaceDto.class);
+
+        assertEquals(HttpStatus.OK, deleteResponse.getStatusCode(), "Expected a OK status for valid token");
+        assertNotNull(deleteResponse.getBody(), "Space returned null");
+        assertEquals("100x200", deleteResponse.getBody().getDimensions());
+        assertEquals(3,deleteResponse.getBody().getElements().size());
+    }
+
+    @Order(4)
+    @Test
+    @DisplayName("Able to add an element")
+    void ableToAddElement() {
+        //arrange
+        String Spaceurl = "http://localhost:" + serverPort + "/api/v1/space/element";
+        SpaceDto addDto = new SpaceDto();
+        addDto.setId(spaceId);
+        SpaceElementDto spaceElementToAdd = new SpaceElementDto();
+        spaceElementToAdd.setId(element1Id);
+        spaceElementToAdd.setStatic(true);
+        spaceElementToAdd.setX(50);
+        spaceElementToAdd.setY(20);
+        addDto.setElements(List.of(spaceElementToAdd));
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("Authorization", "Bearer " + userToken);
+        HttpEntity<SpaceDto> addRequest = new HttpEntity<>(addDto, headers);
+        //act
+        ResponseEntity<SpaceDto> addResponse = restTemplate.exchange(
+                Spaceurl, HttpMethod.POST, addRequest, SpaceDto.class);
+
+        assertEquals(HttpStatus.CREATED, addResponse.getStatusCode(), "Expected a CREATED status for valid token");
+        assertNotNull(addResponse.getBody(), "Space returned null");
+        assertEquals("100x200", addResponse.getBody().getDimensions());
+        assertEquals(4,addResponse.getBody().getElements().size());
+    }
 }
