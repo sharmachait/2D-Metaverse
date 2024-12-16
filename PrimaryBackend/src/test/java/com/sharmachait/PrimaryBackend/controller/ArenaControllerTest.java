@@ -40,7 +40,6 @@ class ArenaControllerTest {
         headers.setContentType(MediaType.APPLICATION_JSON);
         String signupUrl = "http://localhost:" + serverPort + "/auth/signup";
 
-
         LoginDto loginDto = new LoginDto();
         loginDto.setUsername("arenacontrolleradmin");
         loginDto.setPassword("password");
@@ -216,6 +215,33 @@ class ArenaControllerTest {
                 Spaceurl, HttpMethod.POST, addRequest, SpaceDto.class);
 
         assertEquals(HttpStatus.CREATED, addResponse.getStatusCode(), "Expected a CREATED status for valid token");
+        assertNotNull(addResponse.getBody(), "Space returned null");
+        assertEquals("100x200", addResponse.getBody().getDimensions());
+        assertEquals(4,addResponse.getBody().getElements().size());
+    }
+
+    @Order(5)
+    @Test
+    @DisplayName("Not able to add an element out of bounds")
+    void noAbleToAddElementOutOfBounds() {
+        //arrange
+        String Spaceurl = "http://localhost:" + serverPort + "/api/v1/space/element";
+        SpaceDto addDto = new SpaceDto();
+        addDto.setId(spaceId);
+        SpaceElementDto spaceElementToAdd = new SpaceElementDto();
+        spaceElementToAdd.setId(element1Id);
+        spaceElementToAdd.setStatic(true);
+        spaceElementToAdd.setX(100000);
+        spaceElementToAdd.setY(200000);
+        addDto.setElements(List.of(spaceElementToAdd));
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("Authorization", "Bearer " + userToken);
+        HttpEntity<SpaceDto> addRequest = new HttpEntity<>(addDto, headers);
+        //act
+        ResponseEntity<SpaceDto> addResponse = restTemplate.exchange(
+                Spaceurl, HttpMethod.POST, addRequest, SpaceDto.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, addResponse.getStatusCode(), "Expected a BAD_REQUEST status for valid token");
         assertNotNull(addResponse.getBody(), "Space returned null");
         assertEquals("100x200", addResponse.getBody().getDimensions());
         assertEquals(4,addResponse.getBody().getElements().size());

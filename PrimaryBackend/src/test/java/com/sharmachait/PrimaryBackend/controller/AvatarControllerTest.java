@@ -34,7 +34,7 @@ class AvatarControllerTest {
         LoginDto loginDto = new LoginDto();
         loginDto.setUsername("avatarcontroller");
         loginDto.setPassword("password");
-        loginDto.setRole(Role.ROLE_USER);
+        loginDto.setRole(Role.ROLE_ADMIN);
 
         restTemplate = new RestTemplate();
         String signupUrl = "http://localhost:" + serverPort + "/auth/signup";
@@ -48,7 +48,7 @@ class AvatarControllerTest {
         token = authResponse.getJwt();
         userId = authResponse.getUserId();
         // Step 2: Create Avatar
-        String avatarUrl = "http://localhost:" + serverPort + "/api/v1/avatar";
+        String avatarUrl = "http://localhost:" + serverPort + "/api/v1/admin/avatar";
         headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("Authorization", "Bearer " + token);

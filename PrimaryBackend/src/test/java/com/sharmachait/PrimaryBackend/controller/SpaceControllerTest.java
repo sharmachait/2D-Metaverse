@@ -303,7 +303,7 @@ class SpaceControllerTest {
                 Spaceurl,HttpMethod.GET, request, new ParameterizedTypeReference<List<SpaceDto>>() {});
 
         assertEquals(HttpStatus.OK, spaceResponse.getStatusCode(), "Expected a OK status for valid token");
-        assertNull(spaceResponse.getBody(), "Space did not return null");
+        assertNotNull(spaceResponse.getBody(), "Space returned null");
         assertEquals(spaceResponse.getBody().size(), 0, "Space did not return empty list");
     }
 
