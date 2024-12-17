@@ -50,7 +50,6 @@ class SpaceControllerTest {
         adminId = authResponse.getUserId();
 
         // Step 1: Signup as User
-        loginDto = new LoginDto();
         loginDto.setUsername("spacecontrolleruser");
         loginDto.setRole(Role.ROLE_USER);
         HttpEntity<LoginDto> signupRequestUser = new HttpEntity<>(loginDto, headers);
