@@ -1,8 +1,9 @@
 package com.sharmachait.ws.controller;
 
-import com.sharmachait.ws.model.dto.*;
-import com.sharmachait.ws.model.entity.Role;
-import com.sharmachait.ws.model.response.AuthResponse;
+import com.sharmachait.ws.models.dto.*;
+import com.sharmachait.ws.models.entity.Role;
+import com.sharmachait.ws.models.response.AuthResponse;
+import jakarta.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestInstance;
@@ -10,11 +11,26 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.*;
+import org.springframework.lang.NonNull;
+import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.simp.stomp.StompFrameHandler;
+import org.springframework.messaging.simp.stomp.StompHeaders;
+import org.springframework.messaging.simp.stomp.StompSession;
+import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.socket.client.standard.StandardWebSocketClient;
+import org.springframework.web.socket.messaging.WebSocketStompClient;
+import org.springframework.web.socket.sockjs.client.SockJsClient;
+import org.springframework.web.socket.sockjs.client.Transport;
+import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -36,6 +52,8 @@ class SpaceControllerTest {
     static String spaceId;
     private static RestTemplate restTemplate;
     private static HttpHeaders headers = new HttpHeaders();
+
+    private static WebSocketStompClient stompClient;
 
     static void setUpHttp(){
         // Step 1: Signup as admin
@@ -122,12 +140,119 @@ class SpaceControllerTest {
         ResponseEntity<SpaceDto> spaceResponse = restTemplate.postForEntity(spaceUrl, request, SpaceDto.class);
         spaceId = spaceResponse.getBody().getId();
     }
-    static void setUpWs(){
-
+    private static String getWsPath() {
+        return "ws://localhost:" + serverPort + "/ws";
     }
+
+    private static CompletableFuture<MessageDto> ws1Future, ws2Future;
+    private static StompSession ws1,ws2;
+    private static List<MessageDto> ws1Messages, ws2Messages;
+
+    static void setUpWs() throws ExecutionException, InterruptedException, TimeoutException {
+
+        List<Transport> transports = new ArrayList<>();
+        transports.add(new WebSocketTransport(new StandardWebSocketClient()));
+        SockJsClient sockJsClient = new SockJsClient(transports);
+
+        stompClient = new WebSocketStompClient(sockJsClient);
+        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+        ws1Future= new CompletableFuture<>();
+        ws1Messages = new ArrayList<>();
+        ws2Future= new CompletableFuture<>();
+        ws2Messages = new ArrayList<>();
+
+        ws1 = stompClient.connectAsync(getWsPath(), new StompSessionHandlerAdapter() {})
+                .get(5, TimeUnit.SECONDS);
+        ws2 = stompClient.connectAsync(getWsPath(), new StompSessionHandlerAdapter() {})
+                .get(5, TimeUnit.SECONDS);
+
+        ws1.subscribe("/topic/movement", new StompFrameHandler() {
+            @Override
+            @NonNull
+            public Type getPayloadType(@Nullable StompHeaders headers) {
+                return MessageDto.class;
+            }
+
+            @Override
+            public void handleFrame(@Nullable StompHeaders headers, Object payload) {
+                ws1Future.complete((MessageDto) payload);
+                addMessage(ws1Messages, (MessageDto) payload);
+            }
+        });
+        ws2.subscribe("/topic/movement", new StompFrameHandler() {
+            @Override
+            @NonNull
+            public Type getPayloadType(@Nullable StompHeaders headers) {
+                return MessageDto.class;
+            }
+
+            @Override
+            public void handleFrame(@Nullable StompHeaders headers, Object payload) {
+                ws2Future.complete((MessageDto) payload);
+                addMessage(ws2Messages, (MessageDto) payload);
+            }
+        });
+
+        //join a room
+        MessageDto ws1Message = MessageDto.builder()
+                .type(MessageType.JOIN)
+                .payload(MessagePayload.builder()
+                        .spaceId(spaceId)
+                        .token(adminToken)
+                        .build())
+                .build();
+
+        MessageDto ws2Message = MessageDto.builder()
+                .type(MessageType.JOIN)
+                .payload(MessagePayload.builder()
+                        .spaceId(spaceId)
+                        .token(userToken)
+                        .build())
+                .build();
+
+        ws1.send("/topic/space/join",ws1Message);
+        ws2.send("/topic/space/join",ws2Message);
+    }
+
+    private static final Object lock = new Object();
+    // To safely add a message and notify waiting threads
+    static void addMessage(List<MessageDto> messages, MessageDto message) {
+        synchronized (lock) {
+            messages.add(message);
+            lock.notifyAll(); // Notify all waiting threads
+        }
+    }
+
+    private CompletableFuture<MessageDto> waitForAndPopLatestMessages(List<MessageDto> messages) {
+        return CompletableFuture.supplyAsync(() -> {
+            synchronized (lock) {
+                try {
+                    // Wait with a timeout to prevent infinite waiting
+                    long waitTime = 100; // 5 seconds
+                    long startTime = System.currentTimeMillis();
+
+                    while (messages.isEmpty()) {
+                        long remainingTime = waitTime - (System.currentTimeMillis() - startTime);
+                        if (remainingTime <= 0) {
+                            throw new TimeoutException("No message received within timeout period");
+                        }
+                        lock.wait(remainingTime);
+                    }
+                    return messages.remove(0);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Thread interrupted", e);
+                } catch (TimeoutException e) {
+                    throw new RuntimeException("Waiting for message timed out", e);
+                }
+            }
+        });
+    }
+
     @BeforeAll
-    static void setUp() {
+    static void setUp() throws ExecutionException, InterruptedException, TimeoutException {
         setUpHttp();
         setUpWs();
     }
 }
+

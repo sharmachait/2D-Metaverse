@@ -1,7 +1,17 @@
 package com.sharmachait.ws.controller;
 
-import org.springframework.web.bind.annotation.RestController;
+import com.sharmachait.ws.models.dto.MovementMessageDto;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.stereotype.Controller;
 
-@RestController
+
+@Controller
 public class MovementController {
+    @MessageMapping("/user/movement")//app/user/movement
+    @SendTo("/topic/movement")
+    public MovementMessageDto sendMovementMessage(@Payload MovementMessageDto movementMessageDto) {
+        return movementMessageDto;
+    }
 }

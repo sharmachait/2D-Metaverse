@@ -1,4 +1,4 @@
-package com.sharmachait.ws.model;
+package com.sharmachait.ws.models.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -7,12 +7,13 @@ import jakarta.persistence.Id;
 import lombok.Data;
 
 @Data
-@Entity
+//@Entity
 public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
     private String username;
+
     private Status status;
 }

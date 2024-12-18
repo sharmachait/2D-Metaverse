@@ -1,6 +1,6 @@
-package com.sharmachait.ws.model.dto;
+package com.sharmachait.ws.models.dto;
 
-import com.sharmachait.ws.model.entity.Role;
+import com.sharmachait.ws.models.entity.Role;
 import lombok.Data;
 
 @Data

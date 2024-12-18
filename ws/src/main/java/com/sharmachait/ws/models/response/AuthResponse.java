@@ -1,4 +1,4 @@
-package com.sharmachait.ws.model.response;
+package com.sharmachait.ws.models.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

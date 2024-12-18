@@ -1,4 +1,4 @@
-package com.sharmachait.ws.model.dto;
+package com.sharmachait.ws.models.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

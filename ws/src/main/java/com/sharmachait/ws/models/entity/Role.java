@@ -1,4 +1,4 @@
-package com.sharmachait.ws.model.entity;
+package com.sharmachait.ws.models.entity;
 
 public enum Role {
     ROLE_ADMIN,

@@ -1,4 +1,4 @@
-package com.sharmachait.ws.model;
+package com.sharmachait.ws.models.entity;
 
 import lombok.Builder;
 import lombok.Data;

@@ -1,6 +1,6 @@
 package com.sharmachait.ws.service;
 
-import com.sharmachait.ws.model.ChatRoom;
+import com.sharmachait.ws.models.entity.ChatRoom;
 import com.sharmachait.ws.repository.ChatRoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
