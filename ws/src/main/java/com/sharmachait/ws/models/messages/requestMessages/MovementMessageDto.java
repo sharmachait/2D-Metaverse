@@ -1,4 +1,4 @@
-package com.sharmachait.ws.models.dto;
+package com.sharmachait.ws.models.messages.requestMessages;
 
 import lombok.Data;
 

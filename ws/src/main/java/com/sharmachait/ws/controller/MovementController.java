@@ -1,6 +1,6 @@
 package com.sharmachait.ws.controller;
 
-import com.sharmachait.ws.models.dto.MovementMessageDto;
+import com.sharmachait.ws.models.messages.requestMessages.MovementMessageDto;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;

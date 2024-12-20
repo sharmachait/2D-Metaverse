@@ -1,13 +1,16 @@
 package com.sharmachait.ws.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharmachait.ws.models.dto.*;
 import com.sharmachait.ws.models.entity.Role;
+import com.sharmachait.ws.models.messages.requestMessages.joinSpace.JoinSpaceMessage;
+import com.sharmachait.ws.models.messages.requestMessages.joinSpace.JoinSpacePayload;
+import com.sharmachait.ws.models.messages.MessageType;
+import com.sharmachait.ws.models.messages.responseMessages.joinedSpace.JoinedSpaceResponse;
 import com.sharmachait.ws.models.response.AuthResponse;
 import jakarta.annotation.Nullable;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.*;
@@ -23,7 +26,6 @@ import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.Transport;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
-
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +33,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -40,6 +43,7 @@ class SpaceControllerTest {
     void setServerPort(int serverPort) {
         SpaceControllerTest.serverPort = serverPort;
     }
+
     private static int serverPort;
     private static int apiPort = 5455;
     static String adminToken;
@@ -53,7 +57,12 @@ class SpaceControllerTest {
     private static RestTemplate restTemplate;
     private static HttpHeaders headers = new HttpHeaders();
 
-    private static WebSocketStompClient stompClient;
+
+    @BeforeAll
+    static void setUp() throws ExecutionException, InterruptedException, TimeoutException {
+        setUpHttp();
+        setUpWs();
+    }
 
     static void setUpHttp(){
         // Step 1: Signup as admin
@@ -140,13 +149,14 @@ class SpaceControllerTest {
         ResponseEntity<SpaceDto> spaceResponse = restTemplate.postForEntity(spaceUrl, request, SpaceDto.class);
         spaceId = spaceResponse.getBody().getId();
     }
+
     private static String getWsPath() {
         return "ws://localhost:" + serverPort + "/ws";
     }
 
-    private static CompletableFuture<MessageDto> ws1Future, ws2Future;
+    private static WebSocketStompClient stompClient;
     private static StompSession ws1,ws2;
-    private static List<MessageDto> ws1Messages, ws2Messages;
+    private static List<Object> ws1Messages, ws2Messages;
 
     static void setUpWs() throws ExecutionException, InterruptedException, TimeoutException {
 
@@ -156,9 +166,9 @@ class SpaceControllerTest {
 
         stompClient = new WebSocketStompClient(sockJsClient);
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
-        ws1Future= new CompletableFuture<>();
+//        ws1Future= new CompletableFuture<>();
         ws1Messages = new ArrayList<>();
-        ws2Future= new CompletableFuture<>();
+//        ws2Future= new CompletableFuture<>();
         ws2Messages = new ArrayList<>();
 
         ws1 = stompClient.connectAsync(getWsPath(), new StompSessionHandlerAdapter() {})
@@ -166,69 +176,71 @@ class SpaceControllerTest {
         ws2 = stompClient.connectAsync(getWsPath(), new StompSessionHandlerAdapter() {})
                 .get(5, TimeUnit.SECONDS);
 
-        ws1.subscribe("/topic/movement", new StompFrameHandler() {
+        ws1.subscribe("/topic/space", new StompFrameHandler() {
             @Override
             @NonNull
             public Type getPayloadType(@Nullable StompHeaders headers) {
-                return MessageDto.class;
+                return String.class; // Assume the payload is a JSON string
             }
 
             @Override
             public void handleFrame(@Nullable StompHeaders headers, Object payload) {
-                ws1Future.complete((MessageDto) payload);
-                addMessage(ws1Messages, (MessageDto) payload);
+                Object message = parseMessage(payload);
+                if(message!=null)
+                    addMessage(ws1Messages, message);
             }
         });
-        ws2.subscribe("/topic/movement", new StompFrameHandler() {
+        ws2.subscribe("/topic/space", new StompFrameHandler() {
             @Override
             @NonNull
             public Type getPayloadType(@Nullable StompHeaders headers) {
-                return MessageDto.class;
+                return String.class; // Assume the payload is a JSON string
             }
 
             @Override
             public void handleFrame(@Nullable StompHeaders headers, Object payload) {
-                ws2Future.complete((MessageDto) payload);
-                addMessage(ws2Messages, (MessageDto) payload);
+                Object message = parseMessage(payload);
+                if(message!=null)
+                    addMessage(ws2Messages, message);
             }
         });
+    }
 
-        //join a room
-        MessageDto ws1Message = MessageDto.builder()
-                .type(MessageType.JOIN)
-                .payload(MessagePayload.builder()
-                        .spaceId(spaceId)
-                        .token(adminToken)
-                        .build())
-                .build();
-
-        MessageDto ws2Message = MessageDto.builder()
-                .type(MessageType.JOIN)
-                .payload(MessagePayload.builder()
-                        .spaceId(spaceId)
-                        .token(userToken)
-                        .build())
-                .build();
-
-        ws1.send("/topic/space/join",ws1Message);
-        ws2.send("/topic/space/join",ws2Message);
+    private static Object parseMessage(Object payload){
+        String jsonPayload = (String) payload;
+        try{
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(jsonPayload);
+            String typeString = jsonNode.get("type").asText();
+            MessageType type = MessageType.valueOf(typeString);
+            switch (type) {
+                case SPACE_JOINED:
+                    return objectMapper.readValue(jsonPayload, JoinedSpaceResponse.class);
+                case JOIN:
+                    return objectMapper.readValue(jsonPayload, JoinSpaceMessage.class);
+                default:
+                    return null;
+            }
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private static final Object lock = new Object();
     // To safely add a message and notify waiting threads
-    static void addMessage(List<MessageDto> messages, MessageDto message) {
+    static void addMessage(List<Object> messages, Object message) {
         synchronized (lock) {
             messages.add(message);
             lock.notifyAll(); // Notify all waiting threads
         }
     }
 
-    private CompletableFuture<MessageDto> waitForAndPopLatestMessages(List<MessageDto> messages) {
+    private CompletableFuture<Object> waitForAndPopLatestMessages(List<Object> messages) {
         return CompletableFuture.supplyAsync(() -> {
             synchronized (lock) {
                 try {
                     // Wait with a timeout to prevent infinite waiting
-                    long waitTime = 100; // 5 seconds
+                    long waitTime = 100;
                     long startTime = System.currentTimeMillis();
 
                     while (messages.isEmpty()) {
@@ -238,6 +250,7 @@ class SpaceControllerTest {
                         }
                         lock.wait(remainingTime);
                     }
+                    // Extra safety check
                     return messages.remove(0);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -249,10 +262,32 @@ class SpaceControllerTest {
         });
     }
 
-    @BeforeAll
-    static void setUp() throws ExecutionException, InterruptedException, TimeoutException {
-        setUpHttp();
-        setUpWs();
+    @Order(1)
+    @Test
+    void getAckOnJoiningSpace() throws ExecutionException, InterruptedException, TimeoutException {
+        //join a room
+        JoinSpaceMessage ws1Message = JoinSpaceMessage.builder()
+                .type(MessageType.JOIN)
+                .payload(JoinSpacePayload.builder()
+                        .spaceId(spaceId)
+                        .token(adminToken)
+                        .build())
+                .build();
+
+        JoinSpaceMessage ws2Message = JoinSpaceMessage.builder()
+                .type(MessageType.JOIN)
+                .payload(JoinSpacePayload.builder()
+                        .spaceId(spaceId)
+                        .token(userToken)
+                        .build())
+                .build();
+
+        ws1.send("/topic/space",ws1Message);
+        ws2.send("/topic/space",ws2Message);
+
+        CompletableFuture<Object> ws1future = waitForAndPopLatestMessages(ws1Messages);
+        JoinedSpaceResponse ws1response = (JoinedSpaceResponse)ws1future.get(100,TimeUnit.MILLISECONDS);
+        assertEquals(MessageType.SPACE_JOINED, ws1response.getType());
     }
 }
 

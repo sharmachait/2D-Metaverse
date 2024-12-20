@@ -9,8 +9,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class PrimaryBackendApplication {
 
 	public static void main(String[] args) {
-		User res = new User();
-		res.setUsername("somemessage");
 		SpringApplication.run(PrimaryBackendApplication.class, args);
 	}
 

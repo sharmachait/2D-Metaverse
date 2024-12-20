@@ -1,6 +1,6 @@
 package com.sharmachait.ws.controller;
 
-import com.sharmachait.ws.models.dto.MovementMessageDto;
+import com.sharmachait.ws.models.messages.requestMessages.MovementMessageDto;
 import jakarta.annotation.Nullable;
 import org.springframework.lang.NonNull;
 import org.junit.jupiter.api.*;

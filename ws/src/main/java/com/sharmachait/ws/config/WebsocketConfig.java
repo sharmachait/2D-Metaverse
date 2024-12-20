@@ -2,13 +2,11 @@ package com.sharmachait.ws.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharmachait.ws.config.jwt.JwtConstants;
-import com.sharmachait.ws.models.dto.MessageDto;
-import com.sharmachait.ws.models.dto.MessageType;
+import com.sharmachait.ws.models.messages.requestMessages.joinSpace.JoinSpaceMessage;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -79,8 +77,8 @@ public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
                     }
                     String payload = (String) message.getPayload();
                     ObjectMapper objectMapper = new ObjectMapper();
-                    MessageDto messageDto = objectMapper.readValue(payload, MessageDto.class);
-                    String token = messageDto.getPayload().getToken(); // Get the token from the payload
+                    JoinSpaceMessage joinSpaceMessage = objectMapper.readValue(payload, JoinSpaceMessage.class);
+                    String token = joinSpaceMessage.getPayload().getToken(); // Get the token from the payload
                     if(token==null){
                         throw new RuntimeException("Invalid token, can not be empty");
                     }
