@@ -1,6 +1,8 @@
 package com.sharmachait.ws.controller;
 
-import com.sharmachait.ws.models.messages.requestMessages.MovementMessageDto;
+import com.sharmachait.ws.models.messages.MessageType;
+import com.sharmachait.ws.models.messages.requestMessages.movement.MovementMessage;
+import com.sharmachait.ws.models.messages.requestMessages.movement.MovementPayload;
 import jakarta.annotation.Nullable;
 import org.springframework.lang.NonNull;
 import org.junit.jupiter.api.*;
@@ -26,7 +28,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -35,7 +36,7 @@ class MovementControllerTest {
     private int port;
 
     private WebSocketStompClient stompClient;
-    private CompletableFuture<MovementMessageDto> movementFuture;
+    private CompletableFuture<MovementMessage> movementFuture;
 
     private String getWsPath() {
         return "ws://localhost:" + port + "/ws";
@@ -64,30 +65,34 @@ class MovementControllerTest {
             @Override
             @NonNull
             public Type getPayloadType(@Nullable StompHeaders headers) {
-                return MovementMessageDto.class;
+                return MovementMessage.class;
             }
 
             @Override
             public void handleFrame(@Nullable StompHeaders headers, Object payload) {
-                movementFuture.complete((MovementMessageDto) payload);
+                movementFuture.complete((MovementMessage) payload);
             }
         });
 
-        // Create a movement message
-        MovementMessageDto sentMessage = new MovementMessageDto();
-        sentMessage.setUserId("player1");
-        sentMessage.setX(100);
-        sentMessage.setY(200);
+        MovementMessage sentMessage = MovementMessage.builder()
+                .type(MessageType.MOVE)
+                .payload(MovementPayload.builder()
+                        .userId("player1")
+                        .x(100)
+                        .y(200)
+                        .token("Bearer eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3MzQ3MjE5NjgsImV4cCI6MTczNDgwODM2OCwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJ3c3NwYWNlY29udHJvbGxlcmFkbWluIiwiaWQiOiI3OGE5NmJhZC02NmQzLTRlYzQtYTU5Yy01YjIzMGE5N2QyYTIifQ.ShA777WRQ_uj58Q4lFEPh4DYVcKwsSnRecZcbu7CuBQ")
+                        .build())
+                .build();
 
         // Send the message
-        stompSession.send("/app/user/movement", sentMessage);
+        stompSession.send("/topic/movement", sentMessage);
 
         // Wait and verify the received message
-        MovementMessageDto receivedMessage = movementFuture.get(5, TimeUnit.SECONDS);
+        MovementMessage receivedMessage = movementFuture.get(5, TimeUnit.SECONDS);
 
-        assertEquals(sentMessage.getUserId(), receivedMessage.getUserId());
-        assertEquals(sentMessage.getX(), receivedMessage.getX());
-        assertEquals(sentMessage.getY(), receivedMessage.getY());
+        assertEquals(sentMessage.getPayload().getUserId(), receivedMessage.getPayload().getUserId());
+        assertEquals(sentMessage.getPayload().getX(), receivedMessage.getPayload().getX());
+        assertEquals(sentMessage.getPayload().getY(), receivedMessage.getPayload().getY());
     }
 
 }

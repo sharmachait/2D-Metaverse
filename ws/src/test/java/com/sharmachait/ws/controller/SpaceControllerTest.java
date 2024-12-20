@@ -46,16 +46,17 @@ class SpaceControllerTest {
 
     private static int serverPort;
     private static int apiPort = 5455;
-    static String adminToken;
-    static String userToken;
-    static String adminId;
-    static String element1Id;
-    static String element2Id;
-    static String userId;
-    static String mapId;
-    static String spaceId;
+    private static String adminToken;
+    private static String userToken;
+    private static String adminId;
+    private static String element1Id;
+    private static String element2Id;
+    private static String userId;
+    private static String mapId;
+    private static String spaceId;
     private static RestTemplate restTemplate;
     private static HttpHeaders headers = new HttpHeaders();
+    private static int userX, userY, adminX, adminY;
 
 
     @BeforeAll
@@ -166,9 +167,7 @@ class SpaceControllerTest {
 
         stompClient = new WebSocketStompClient(sockJsClient);
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
-//        ws1Future= new CompletableFuture<>();
         ws1Messages = new ArrayList<>();
-//        ws2Future= new CompletableFuture<>();
         ws2Messages = new ArrayList<>();
 
         ws1 = stompClient.connectAsync(getWsPath(), new StompSessionHandlerAdapter() {})
@@ -190,6 +189,7 @@ class SpaceControllerTest {
                     addMessage(ws1Messages, message);
             }
         });
+
         ws2.subscribe("/topic/space", new StompFrameHandler() {
             @Override
             @NonNull
@@ -283,11 +283,59 @@ class SpaceControllerTest {
                 .build();
 
         ws1.send("/topic/space",ws1Message);
-        ws2.send("/topic/space",ws2Message);
-
         CompletableFuture<Object> ws1future = waitForAndPopLatestMessages(ws1Messages);
         JoinedSpaceResponse ws1response = (JoinedSpaceResponse)ws1future.get(100,TimeUnit.MILLISECONDS);
+        adminX = ws1response.getPayload().getSpawn().getX();
+        adminY = ws1response.getPayload().getSpawn().getY();
+
+        ws2.send("/topic/space",ws2Message);
+        CompletableFuture<Object> ws2future = waitForAndPopLatestMessages(ws2Messages);
+        JoinedSpaceResponse ws2response = (JoinedSpaceResponse)ws2future.get(100,TimeUnit.MILLISECONDS);
+        userX = ws2response.getPayload().getSpawn().getX();
+        userY = ws2response.getPayload().getSpawn().getY();
+
         assertEquals(MessageType.SPACE_JOINED, ws1response.getType());
+        assertEquals(MessageType.SPACE_JOINED, ws2response.getType());
+        assertEquals(0, ws1response.getPayload().getUsers().size());
+        assertEquals(1, ws2response.getPayload().getUsers().size());
+    }
+
+    @Order(2)
+    @Test
+    void userShouldNotBeAbleToMoveOutOfBound() throws ExecutionException, InterruptedException, TimeoutException {
+        //join a room
+        JoinSpaceMessage ws1Message = JoinSpaceMessage.builder()
+                .type(MessageType.JOIN)
+                .payload(JoinSpacePayload.builder()
+                        .spaceId(spaceId)
+                        .token(adminToken)
+                        .build())
+                .build();
+
+        JoinSpaceMessage ws2Message = JoinSpaceMessage.builder()
+                .type(MessageType.JOIN)
+                .payload(JoinSpacePayload.builder()
+                        .spaceId(spaceId)
+                        .token(userToken)
+                        .build())
+                .build();
+
+        ws1.send("/topic/space",ws1Message);
+        CompletableFuture<Object> ws1future = waitForAndPopLatestMessages(ws1Messages);
+        JoinedSpaceResponse ws1response = (JoinedSpaceResponse)ws1future.get(100,TimeUnit.MILLISECONDS);
+        adminX = ws1response.getPayload().getSpawn().getX();
+        adminY = ws1response.getPayload().getSpawn().getY();
+
+        ws2.send("/topic/space",ws2Message);
+        CompletableFuture<Object> ws2future = waitForAndPopLatestMessages(ws2Messages);
+        JoinedSpaceResponse ws2response = (JoinedSpaceResponse)ws2future.get(100,TimeUnit.MILLISECONDS);
+        userX = ws2response.getPayload().getSpawn().getX();
+        userY = ws2response.getPayload().getSpawn().getY();
+
+        assertEquals(MessageType.SPACE_JOINED, ws1response.getType());
+        assertEquals(MessageType.SPACE_JOINED, ws2response.getType());
+        assertEquals(0, ws1response.getPayload().getUsers().size());
+        assertEquals(1, ws2response.getPayload().getUsers().size());
     }
 }
 

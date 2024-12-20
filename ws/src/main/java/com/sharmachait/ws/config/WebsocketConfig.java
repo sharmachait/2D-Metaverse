@@ -1,8 +1,8 @@
 package com.sharmachait.ws.config;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharmachait.ws.config.jwt.JwtConstants;
-import com.sharmachait.ws.models.messages.requestMessages.joinSpace.JoinSpaceMessage;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -26,6 +26,7 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Configuration
@@ -42,8 +43,11 @@ public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .setAllowedOrigins("*")
-                .withSockJS();
+                .setAllowedOrigins("*")  // Or specify your domains
+                .setAllowedOriginPatterns("*")  // Or specify your patterns
+                .withSockJS()
+                .setClientLibraryUrl("/webjars/sockjs-client/1.0.2/sockjs.min.js")
+                .setSessionCookieNeeded(false);  // This disables credentials
     }
 
     @Override
@@ -72,14 +76,23 @@ public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
                         throw new MessagingException("Invalid message headers");
                     }
                     // Skip CONNECT frame processing
-                    if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+                    if (StompCommand.CONNECT.equals(accessor.getCommand())
+                            || StompCommand.SUBSCRIBE.equals(accessor.getCommand())
+                            || StompCommand.DISCONNECT.equals(accessor.getCommand())
+                    ) {
                         return message;
                     }
-                    String payload = (String) message.getPayload();
+                    Object payloadObj = message.getPayload();
+                    if (!(payloadObj instanceof byte[])) {
+                        throw new MessagingException("Invalid payload type, expected byte[]");
+                    }
+                    String jsonPayload = new String((byte[]) payloadObj, StandardCharsets.UTF_8);
+
                     ObjectMapper objectMapper = new ObjectMapper();
-                    JoinSpaceMessage joinSpaceMessage = objectMapper.readValue(payload, JoinSpaceMessage.class);
-                    String token = joinSpaceMessage.getPayload().getToken(); // Get the token from the payload
-                    if(token==null){
+                    JsonNode jsonNode = objectMapper.readTree(jsonPayload);
+                    String token = jsonNode.get("payload").get("token").asText();
+
+                    if(token == null || token.equals("null") ){
                         throw new RuntimeException("Invalid token, can not be empty");
                     }
                     if(!validateToken(token)){
