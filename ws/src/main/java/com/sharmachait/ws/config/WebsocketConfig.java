@@ -43,11 +43,8 @@ public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .setAllowedOrigins("*")  // Or specify your domains
                 .setAllowedOriginPatterns("*")  // Or specify your patterns
-                .withSockJS()
-                .setClientLibraryUrl("/webjars/sockjs-client/1.0.2/sockjs.min.js")
-                .setSessionCookieNeeded(false);  // This disables credentials
+                .withSockJS();
     }
 
     @Override

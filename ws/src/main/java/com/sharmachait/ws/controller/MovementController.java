@@ -9,7 +9,7 @@ import org.springframework.stereotype.Controller;
 
 @Controller
 public class MovementController {
-    @MessageMapping("/user/movement")//app/user/movement
+    @MessageMapping("/move")//app/movement
     @SendTo("/topic/movement")
     public MovementMessage sendMovementMessage(@Payload MovementMessage movementMessage) {
         return movementMessage;

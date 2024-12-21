@@ -28,6 +28,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -85,7 +87,7 @@ class MovementControllerTest {
                 .build();
 
         // Send the message
-        stompSession.send("/topic/movement", sentMessage);
+        stompSession.send("/app/move", sentMessage);
 
         // Wait and verify the received message
         MovementMessage receivedMessage = movementFuture.get(5, TimeUnit.SECONDS);
