@@ -1,11 +1,22 @@
 package com.sharmachait.PrimaryBackend.controller;
 
-import lombok.Data;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.sharmachait.PrimaryBackend.models.dto.UserDto;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@Data
 @RequestMapping("/api/v1/user")
 public class UserController {
+    @GetMapping("/metadata/{userId}")
+    public ResponseEntity<?> metadata(@PathVariable String userId) {
+
+    }
+    @GetMapping("/metadata/bulk/{spaceId}")
+    public ResponseEntity<?> bulkMetadata(@PathVariable String spaceId){
+
+    }
+    @PutMapping("/metadata/{userId}")
+    public ResponseEntity<?> putUser(@PathVariable String userId){
+
+    }
 }

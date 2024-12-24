@@ -7,7 +7,6 @@ import com.sharmachait.PrimaryBackend.models.response.AuthResponse;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
@@ -69,12 +68,10 @@ class AvatarControllerTest {
     @DisplayName("Get All avatars should return more than one avatar")
     void getAvatarsInformation() {
         //arrange
-        StringBuilder urlBuilder = new StringBuilder();
-        urlBuilder.append("http://localhost:")
-                .append(serverPort)
-                .append("/api/v1/avatars");
 
-        String url = urlBuilder.toString();
+        String url = "http://localhost:" +
+                serverPort +
+                "/api/v1/avatars";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
