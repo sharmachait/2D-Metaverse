@@ -1,8 +1,8 @@
 package com.sharmachait.ws.controller;
 
 import com.sharmachait.ws.models.messages.MessageType;
-import com.sharmachait.ws.models.messages.requestMessages.movement.MovementMessage;
-import com.sharmachait.ws.models.messages.requestMessages.movement.MovementPayload;
+import com.sharmachait.ws.models.messages.requestMessages.movement.MovementRequest;
+import com.sharmachait.ws.models.messages.requestMessages.movement.MovementRequestPayload;
 import jakarta.annotation.Nullable;
 import org.springframework.lang.NonNull;
 import org.junit.jupiter.api.*;
@@ -38,7 +38,7 @@ class MovementControllerTest {
     private int port;
 
     private WebSocketStompClient stompClient;
-    private CompletableFuture<MovementMessage> movementFuture;
+    private CompletableFuture<MovementRequest> movementFuture;
 
     private String getWsPath() {
         return "ws://localhost:" + port + "/ws";
@@ -67,19 +67,18 @@ class MovementControllerTest {
             @Override
             @NonNull
             public Type getPayloadType(@Nullable StompHeaders headers) {
-                return MovementMessage.class;
+                return MovementRequest.class;
             }
 
             @Override
             public void handleFrame(@Nullable StompHeaders headers, Object payload) {
-                movementFuture.complete((MovementMessage) payload);
+                movementFuture.complete((MovementRequest) payload);
             }
         });
 
-        MovementMessage sentMessage = MovementMessage.builder()
+        MovementRequest sentMessage = MovementRequest.builder()
                 .type(MessageType.MOVE)
-                .payload(MovementPayload.builder()
-                        .userId("player1")
+                .payload(MovementRequestPayload.builder()
                         .x(100)
                         .y(200)
                         .token("Bearer eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3MzQ3MjE5NjgsImV4cCI6MTczNDgwODM2OCwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJ3c3NwYWNlY29udHJvbGxlcmFkbWluIiwiaWQiOiI3OGE5NmJhZC02NmQzLTRlYzQtYTU5Yy01YjIzMGE5N2QyYTIifQ.ShA777WRQ_uj58Q4lFEPh4DYVcKwsSnRecZcbu7CuBQ")
@@ -90,9 +89,8 @@ class MovementControllerTest {
         stompSession.send("/app/move", sentMessage);
 
         // Wait and verify the received message
-        MovementMessage receivedMessage = movementFuture.get(5, TimeUnit.SECONDS);
+        MovementRequest receivedMessage = movementFuture.get(5, TimeUnit.SECONDS);
 
-        assertEquals(sentMessage.getPayload().getUserId(), receivedMessage.getPayload().getUserId());
         assertEquals(sentMessage.getPayload().getX(), receivedMessage.getPayload().getX());
         assertEquals(sentMessage.getPayload().getY(), receivedMessage.getPayload().getY());
     }

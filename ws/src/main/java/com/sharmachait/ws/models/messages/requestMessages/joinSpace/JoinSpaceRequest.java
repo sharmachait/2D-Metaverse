@@ -1,18 +1,16 @@
-package com.sharmachait.ws.models.messages.requestMessages.movement;
+package com.sharmachait.ws.models.messages.requestMessages.joinSpace;
 
 import com.sharmachait.ws.models.messages.MessageType;
-import com.sharmachait.ws.models.messages.requestMessages.joinSpace.JoinSpacePayload;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Builder
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class MovementMessage {
+public class JoinSpaceRequest {
     private MessageType type;
-    private MovementPayload payload;
-
+    private JoinSpaceRequestPayload payload;
 }

@@ -11,7 +11,9 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class JoinedSpacePayload {
-    private List<Integer> users;
-    private Spawn spawn;
+public class JoinSpaceResponsePayload {
+    private String spaceId;
+    private List<UserSpawn> users;
+    private int x;
+    private int y;
 }

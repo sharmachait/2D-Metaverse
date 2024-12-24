@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class JoinSpacePayload {
+public class JoinSpaceRequestPayload {
     private String spaceId;
     private String senderId;
     private String token;

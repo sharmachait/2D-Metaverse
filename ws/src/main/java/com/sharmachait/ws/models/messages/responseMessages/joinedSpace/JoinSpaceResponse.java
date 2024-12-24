@@ -1,4 +1,4 @@
-package com.sharmachait.ws.models.messages.requestMessages.joinSpace;
+package com.sharmachait.ws.models.messages.responseMessages.joinedSpace;
 
 import com.sharmachait.ws.models.messages.MessageType;
 import lombok.AllArgsConstructor;
@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class JoinSpaceMessage {
+public class JoinSpaceResponse {
     private MessageType type;
-    private JoinSpacePayload payload;
+    private JoinSpaceResponsePayload payload;
 }
