@@ -4,15 +4,19 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharmachait.ws.models.dto.*;
 import com.sharmachait.ws.models.entity.Role;
+import com.sharmachait.ws.models.messages.Message;
+import com.sharmachait.ws.models.messages.Payload;
 import com.sharmachait.ws.models.messages.requestMessages.joinSpace.JoinSpaceRequest;
 import com.sharmachait.ws.models.messages.requestMessages.joinSpace.JoinSpaceRequestPayload;
 import com.sharmachait.ws.models.messages.MessageType;
 import com.sharmachait.ws.models.messages.requestMessages.movement.MovementRequest;
 import com.sharmachait.ws.models.messages.requestMessages.movement.MovementRequestPayload;
 import com.sharmachait.ws.models.messages.responseMessages.joinedSpace.JoinSpaceResponse;
+import com.sharmachait.ws.models.messages.responseMessages.joinedSpace.JoinSpaceResponsePayload;
 import com.sharmachait.ws.models.messages.responseMessages.joinedSpace.UserSpawn;
 import com.sharmachait.ws.models.messages.responseMessages.leaveSpace.LeaveSpaceResponse;
 import com.sharmachait.ws.models.messages.responseMessages.movement.MovementResponse;
+import com.sharmachait.ws.models.messages.responseMessages.movement.MovementResponsePayload;
 import com.sharmachait.ws.models.response.AuthResponse;
 import jakarta.annotation.Nullable;
 import org.junit.jupiter.api.*;
@@ -50,7 +54,6 @@ class SpaceControllerTest {
     }
 
     private static int serverPort;
-    private static int apiPort = 5455;
     private static String adminToken;
     private static String userToken;
     private static String adminId;
@@ -77,6 +80,7 @@ class SpaceControllerTest {
         loginDto.setPassword("password");
         loginDto.setRole(Role.ROLE_ADMIN);
         restTemplate = new RestTemplate();
+        int apiPort = 5455;
         String signupUrl = "http://localhost:" + apiPort + "/auth/signup";
 
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -160,7 +164,6 @@ class SpaceControllerTest {
         return "ws://localhost:" + serverPort + "/ws";
     }
 
-    private static WebSocketStompClient stompClient;
     private static StompSession ws1,ws2;
     private static List<Object> ws1Messages, ws2Messages;
 
@@ -170,7 +173,7 @@ class SpaceControllerTest {
         transports.add(new WebSocketTransport(new StandardWebSocketClient()));
         SockJsClient sockJsClient = new SockJsClient(transports);
 
-        stompClient = new WebSocketStompClient(sockJsClient);
+        WebSocketStompClient stompClient = new WebSocketStompClient(sockJsClient);
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
         ws1Messages = new ArrayList<>();
         ws2Messages = new ArrayList<>();
@@ -273,17 +276,17 @@ class SpaceControllerTest {
     @Test
     void getAckOnJoiningSpaceAndBroadCast() throws ExecutionException, InterruptedException, TimeoutException {
         //join a room
-        JoinSpaceRequest ws1Message = JoinSpaceRequest.builder()
+        JoinSpaceRequest ws1Message = (JoinSpaceRequest) Message.builder()
                 .type(MessageType.JOIN)
-                .payload(JoinSpaceRequestPayload.builder()
+                .payload(Payload.builder()
                         .spaceId(spaceId)
                         .token(adminToken)
                         .build())
                 .build();
 
-        JoinSpaceRequest ws2Message = JoinSpaceRequest.builder()
+        JoinSpaceRequest ws2Message = (JoinSpaceRequest) Message.builder()
                 .type(MessageType.JOIN)
-                .payload(JoinSpaceRequestPayload.builder()
+                .payload(Payload.builder()
                         .spaceId(spaceId)
                         .token(userToken)
                         .build())
@@ -292,33 +295,33 @@ class SpaceControllerTest {
         ws1.send("/app/space/"+spaceId,ws1Message);
         CompletableFuture<Object> ws1future = waitForAndPopLatestMessages(ws1Messages);
         JoinSpaceResponse ws1response = (JoinSpaceResponse)ws1future.get(100,TimeUnit.MILLISECONDS);
-        adminX = ws1response.getPayload().getX();
-        adminY = ws1response.getPayload().getY();
+        JoinSpaceResponsePayload res1 = (JoinSpaceResponsePayload)(ws1response.getPayload());
+        adminX = res1.getX();
+        adminY = res1.getY();
 
         ws2.send("/app/space/"+spaceId,ws2Message);
         CompletableFuture<Object> ws2future = waitForAndPopLatestMessages(ws2Messages);
         JoinSpaceResponse ws2response = (JoinSpaceResponse)ws2future.get(100,TimeUnit.MILLISECONDS);
-        UserSpawn user;
-
-        userX = ws2response.getPayload().getX();
-        userY = ws2response.getPayload().getY();
+        JoinSpaceResponsePayload res2 = (JoinSpaceResponsePayload)(ws1response.getPayload());
+        userX = res2.getX();
+        userY = res2.getY();
 
         assertEquals(MessageType.SPACE_JOINED, ws1response.getType());
         assertEquals(MessageType.SPACE_JOINED, ws2response.getType());
-        assertEquals(0, ws1response.getPayload().getUsers().size());
-        assertEquals(1, ws2response.getPayload().getUsers().size());
-        assertEquals(adminX, ws2response.getPayload().getUsers().get(0).getX());
-        assertEquals(adminY, ws2response.getPayload().getUsers().get(0).getY());
+        assertEquals(0, res1.getUsers().size());
+        assertEquals(1, res1.getUsers().size());
+        assertEquals(adminX, res2.getUsers().get(0).getX());
+        assertEquals(adminY, res2.getUsers().get(0).getY());
 
         CompletableFuture<Object> joinBroadcast = waitForAndPopLatestMessages(ws1Messages);
         JoinSpaceResponse joinResponse = (JoinSpaceResponse)joinBroadcast.get(100,TimeUnit.MILLISECONDS);
+        JoinSpaceResponsePayload res3 = (JoinSpaceResponsePayload)(joinResponse.getPayload());
+
         assertEquals(MessageType.SPACE_JOINED_BROADCAST, joinResponse.getType());
-        assertEquals(1, joinResponse.getPayload().getUsers().size());
-        assertEquals(userId, joinResponse.getPayload().getUsers().get(0).getUserId());
-        assertEquals(userX, joinResponse.getPayload().getUsers().get(0).getX());
-        assertEquals(userY, joinResponse.getPayload().getUsers().get(0).getY());
-
-
+        assertEquals(1, res3.getUsers().size());
+        assertEquals(userId, res3.getUsers().get(0).getUserId());
+        assertEquals(userX, res3.getUsers().get(0).getX());
+        assertEquals(userY, res3.getUsers().get(0).getY());
     }
 
     @Order(2)
@@ -339,17 +342,17 @@ class SpaceControllerTest {
         ws1.send("/app/space/"+spaceId,sentMessage);
         CompletableFuture<Object> ws1future = waitForAndPopLatestMessages(ws1Messages);
         MovementResponse ws1response = (MovementResponse)ws1future.get(100,TimeUnit.MILLISECONDS);
-
+        MovementResponsePayload res = (MovementResponsePayload)ws1response.getPayload();
         assertEquals(MessageType.MOVE_REJECTED, ws1response.getType());
-        assertEquals(adminX, ws1response.getPayload().getX());
-        assertEquals(adminY, ws1response.getPayload().getY());
+        assertEquals(adminX, res.getX());
+        assertEquals(adminY, res.getY());
     }
 
     @Order(3)
     @Test
     void userShouldNotBeAbleToJumpABlock() throws ExecutionException, InterruptedException, TimeoutException {
-        //mvoe
-        MovementRequest sentMessage = MovementRequest.builder()
+        //move
+        MovementRequest sentMessage = (MovementRequest) Message.builder()
                 .type(MessageType.MOVE)
                 .payload(MovementRequestPayload.builder()
                         .x(adminX+2)
@@ -363,10 +366,10 @@ class SpaceControllerTest {
         ws1.send("/app/space/"+spaceId,sentMessage);
         CompletableFuture<Object> ws1future = waitForAndPopLatestMessages(ws1Messages);
         MovementResponse ws1response = (MovementResponse)ws1future.get(100,TimeUnit.MILLISECONDS);
-
+        MovementResponsePayload res = (MovementResponsePayload)ws1response.getPayload();
         assertEquals(MessageType.MOVE_REJECTED, ws1response.getType());
-        assertEquals(adminX, ws1response.getPayload().getX());
-        assertEquals(adminY, ws1response.getPayload().getY());
+        assertEquals(adminX, res.getX());
+        assertEquals(adminY, res.getY());
     }
     @Order(4)
     @Test
@@ -386,10 +389,11 @@ class SpaceControllerTest {
         ws1.send("/app/space/"+spaceId,sentMessage);
         CompletableFuture<Object> ws2future = waitForAndPopLatestMessages(ws2Messages);
         MovementResponse ws2response = (MovementResponse)ws2future.get(100,TimeUnit.MILLISECONDS);
+        MovementResponsePayload res = (MovementResponsePayload)ws2response.getPayload();
         //assert
         assertEquals(MessageType.MOVE,ws2response.getType());
-        assertEquals(adminX, ws2response.getPayload().getX() + 1);
-        assertEquals(adminY, ws2response.getPayload().getY());
+        assertEquals(adminX, res.getX() + 1);
+        assertEquals(adminY, res.getY());
         assertEquals(adminId, ws2response.getPayload().getUserId());
         assertEquals(spaceId, ws2response.getPayload().getSpaceId());
     }

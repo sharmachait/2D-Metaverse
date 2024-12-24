@@ -1,17 +1,16 @@
 package com.sharmachait.ws.models.messages.responseMessages.movement;
 
-import com.sharmachait.ws.models.messages.MessageType;
-import com.sharmachait.ws.models.messages.requestMessages.movement.MovementRequestPayload;
+import com.sharmachait.ws.models.messages.Message;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
-@Builder
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MovementResponse {
-    private MessageType type;
-    private MovementResponsePayload payload;
+public class MovementResponse extends Message {
 }

@@ -1,17 +1,16 @@
 package com.sharmachait.ws.models.messages.responseMessages.leaveSpace;
 
-import com.sharmachait.ws.models.messages.MessageType;
-import com.sharmachait.ws.models.messages.responseMessages.movement.MovementResponsePayload;
+import com.sharmachait.ws.models.messages.Message;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
-@Builder
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class LeaveSpaceResponse {
-    private MessageType type;
-    private LeaveSpaceResponsePayload payload;
+public class LeaveSpaceResponse extends Message {
 }

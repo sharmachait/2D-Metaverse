@@ -1,18 +1,15 @@
 package com.sharmachait.ws.models.messages.requestMessages.movement;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.sharmachait.ws.models.messages.Payload;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
-@Builder
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MovementRequestPayload {
-    private String token;
-    private String userId;
-    private String spaceId;
+public class MovementRequestPayload extends Payload {
     private int x;
     private int y;
 }
