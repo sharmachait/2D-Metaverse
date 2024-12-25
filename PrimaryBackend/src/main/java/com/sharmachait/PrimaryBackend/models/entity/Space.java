@@ -19,11 +19,15 @@ public class Space {
     private int width;
     private int height;
     private String thumbnail;
+
     @OneToMany(
             mappedBy = "space",
             fetch = FetchType.EAGER,
-            cascade = CascadeType.PERSIST
+            cascade = CascadeType.ALL
     )
     @JsonManagedReference
     private Set<SpaceElement> spaceElements;
+
+    @OneToOne(fetch = FetchType.EAGER)
+    private User owner;
 }

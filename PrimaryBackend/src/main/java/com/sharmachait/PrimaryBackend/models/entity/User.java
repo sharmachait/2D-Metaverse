@@ -23,6 +23,7 @@ public class User {
     @JsonBackReference
     private Avatar avatar;
 
-    private Role role = Role.ROLE_USER;
-
+    private Role role;
+    @OneToOne(mappedBy = "owner")
+    private Space adminSpace;
 }

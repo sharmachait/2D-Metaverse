@@ -3,7 +3,6 @@ package com.sharmachait.PrimaryBackend.models.entity;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
 
 import java.util.Set;
 

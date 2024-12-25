@@ -1,10 +1,10 @@
 package com.sharmachait.PrimaryBackend.models.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.Set;
 
 @Data
 @Builder
@@ -18,4 +18,20 @@ public class Element {
     private int height;
     private int width;
     private String imageUrl;
+
+    @OneToMany(
+            mappedBy = "element",
+            fetch = FetchType.EAGER,
+            cascade = CascadeType.ALL
+    )
+    @JsonManagedReference
+    private Set<SpaceElement> spaceElements;
+
+    @OneToMany(
+            mappedBy = "element",
+            fetch = FetchType.EAGER,
+            cascade = CascadeType.ALL
+    )
+    @JsonManagedReference
+    private Set<MapElement> mapElements;
 }

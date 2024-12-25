@@ -21,7 +21,7 @@ public class GameMap {
     @OneToMany(
             mappedBy = "gameMap",
             fetch = FetchType.EAGER,
-            cascade = CascadeType.PERSIST
+            cascade = CascadeType.ALL
     )
     @JsonManagedReference
     private Set<MapElement> mapElements;
