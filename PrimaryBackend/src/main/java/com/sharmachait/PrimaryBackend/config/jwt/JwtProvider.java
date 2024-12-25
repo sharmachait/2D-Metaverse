@@ -46,8 +46,7 @@ public class JwtProvider {
         try {
             SecretKey key = Keys.hmacShaKeyFor(JwtConstants.JWT_SECRET.getBytes());
             Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(jwt).getBody();
-            String email = String.valueOf(claims.get("email"));
-            return email;
+            return String.valueOf(claims.get("email"));
         } catch (Exception e) {
             throw new Exception(e);
         }

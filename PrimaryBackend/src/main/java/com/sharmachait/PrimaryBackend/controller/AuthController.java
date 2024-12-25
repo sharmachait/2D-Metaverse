@@ -2,6 +2,7 @@ package com.sharmachait.PrimaryBackend.controller;
 
 import com.sharmachait.PrimaryBackend.config.jwt.JwtProvider;
 import com.sharmachait.PrimaryBackend.models.dto.LoginDto;
+import com.sharmachait.PrimaryBackend.models.entity.Role;
 import com.sharmachait.PrimaryBackend.models.entity.User;
 import com.sharmachait.PrimaryBackend.models.response.AuthResponse;
 import com.sharmachait.PrimaryBackend.service.user.UserService;
@@ -36,13 +37,13 @@ public class AuthController {
     PasswordEncoder passwordEncoder;
     @PostMapping("/signup")
     public ResponseEntity<AuthResponse> register(@RequestBody LoginDto user){
-//        if(user.getUsername() == null|| user.getUsername().isBlank()||user.getPassword().isEmpty()){
-//            AuthResponse errorResponse = new AuthResponse();
-//            errorResponse.setMessage("Username cannot be null or empty");
-//            return ResponseEntity
-//                    .status(HttpStatus.BAD_REQUEST)
-//                    .body(errorResponse);
-//        }
+        if(user.getUsername() == null|| user.getUsername().isBlank()||user.getPassword().isEmpty()){
+            AuthResponse errorResponse = new AuthResponse();
+            errorResponse.setMessage("Username cannot be null or empty");
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(errorResponse);
+        }
         try {
             userService.findByUsername(user.getUsername());
             AuthResponse errorResponse = new AuthResponse();
@@ -62,12 +63,16 @@ public class AuthController {
             newUser.setUsername(user.getUsername());
             newUser.setPassword(passwordEncoder.encode(user.getPassword()));
             newUser.setRole(user.getRole());
+            if(user.getRole()==null){
+                newUser.setRole(Role.ROLE_USER);
+            }
             String auths = newUser.getRole().toString()+",";
             List<GrantedAuthority> authorities = AuthorityUtils.commaSeparatedStringToAuthorityList(auths);
             Authentication auth = new UsernamePasswordAuthenticationToken(user.getUsername(), null, authorities);
-            newUser = userService.save(newUser);
+
             String jwt;
             try{
+                newUser = userService.save(newUser);
                 jwt = JwtProvider.generateToken(auth, newUser.getId());
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
@@ -114,6 +119,7 @@ public class AuthController {
             authResponse.setJwt(jwt);
             authResponse.setStatus(true);
             authResponse.setMessage("Logged in successfully");
+            authResponse.setUserId(savedUser.getId());
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(authResponse);

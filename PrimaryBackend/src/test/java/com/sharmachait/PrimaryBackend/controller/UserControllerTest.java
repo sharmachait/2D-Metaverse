@@ -4,6 +4,7 @@ import com.sharmachait.PrimaryBackend.models.dto.AvatarDto;
 import com.sharmachait.PrimaryBackend.models.dto.LoginDto;
 import com.sharmachait.PrimaryBackend.models.dto.UserDto;
 import com.sharmachait.PrimaryBackend.models.entity.Role;
+import com.sharmachait.PrimaryBackend.models.entity.User;
 import org.junit.jupiter.api.*;
 import com.sharmachait.PrimaryBackend.models.response.AuthResponse;
 
@@ -98,7 +99,7 @@ class UserControllerTest {
     @DisplayName("Update metadata with valid jwt valid avatar id should pass")
     void updateMetadataWithValidJwtValidAvatarIdShouldPass() {
         //arrange
-        String url = "http://localhost:" + serverPort + "/api/v1/user/metadata";
+        String url = "http://localhost:" + serverPort + "/api/v1/user/metadata/"+userId;
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -142,16 +143,14 @@ class UserControllerTest {
     @Order(4)
     @Test
     @DisplayName("Get Avatar information for user Id")
-    void getAvatarInformationForUserId() {
+    void getAvatarInformationForUserBulk() {
         //arrange
-        StringBuilder urlBuilder = new StringBuilder();
-        urlBuilder.append("http://localhost:")
-                .append(serverPort)
-                .append("/api/v1/user/metadata/bulk?ids=[")
-                .append(userId)
-                .append("]");
 
-        String url = urlBuilder.toString();
+        String url = "http://localhost:" +
+                serverPort +
+                "/api/v1/user/metadata/bulk?ids=[" +
+                userId +
+                "]";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -166,6 +165,28 @@ class UserControllerTest {
         assertEquals(avatars.size(), 1, "Size of response body should be 1");
         assertEquals(avatars.get(0).getUserId(), userId, "user ids should match");
         assertEquals(avatars.get(0).getId(), avatarId, "avatar ids should match");
+    }
+
+    @Order(5)
+    @Test
+    @DisplayName("Get Avatar information for user Id")
+    void getAvatarInformationForUserId() {
+        //arrange
+
+        String url = "http://localhost:" +
+                serverPort +
+                "/api/v1/user/metadata/" +
+                userId;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("Authorization", "Bearer " + token);
+
+        HttpEntity<String> request = new HttpEntity<>(headers);
+        //act and assert
+        ResponseEntity<UserDto> response = restTemplate.exchange(url, HttpMethod.GET, request, UserDto.class);
+
+        assertEquals(response.getStatusCode(), HttpStatus.OK, "status code should be OK");
     }
 
 

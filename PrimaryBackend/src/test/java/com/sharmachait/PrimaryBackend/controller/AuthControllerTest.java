@@ -46,7 +46,7 @@ class AuthControllerTest {
                 .block(); // Block to get the ClientResponse synchronously
         //assert
         assertNotNull(clientResponse, "Response object should not be null");
-        assertEquals(clientResponse.statusCode(), HttpStatus.CREATED, "Status code should be 201 CREATED");
+        assertEquals(HttpStatus.CREATED, clientResponse.statusCode() , "Status code should be 201 CREATED");
 
         // Extract and assert the response body
         AuthResponse response = clientResponse.bodyToMono(AuthResponse.class).block();
@@ -58,7 +58,7 @@ class AuthControllerTest {
 
     @Order(2)
     @Test
-    @DisplayName("User can not be created")
+    @DisplayName("User can not be created again")
     void registerDuplicate() {
         //arrange
         WebClient webClient = WebClient.create();

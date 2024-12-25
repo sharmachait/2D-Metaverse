@@ -24,6 +24,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public User findById(String id) throws NoSuchElementException {
+        return userRepository.findById(id).get();
+    }
+
+    @Override
     public User save(User user) {
         return userRepository.save(user);
     }

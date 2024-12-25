@@ -5,6 +5,7 @@ import com.sharmachait.PrimaryBackend.models.entity.User;
 import java.util.NoSuchElementException;
 
 public interface UserService {
-    public User findByUsername(String username) throws NoSuchElementException;
-    public User save(User user);
+    User findByUsername(String username) throws NoSuchElementException;
+    User findById(String id) throws NoSuchElementException;
+    User save(User user);
 }

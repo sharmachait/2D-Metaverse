@@ -173,14 +173,16 @@ class ArenaControllerTest {
         ResponseEntity<SpaceDto> spaceResponse = restTemplate.exchange(
                 Spaceurl, HttpMethod.GET, request, SpaceDto.class);
 
-        String elementId = spaceResponse.getBody().getElements().get(0).getId();
+        String elementId = spaceResponse.getBody().getElements().get(0).getElementId();
 
         Spaceurl = "http://localhost:" + serverPort + "/api/v1/space/element";
 
         SpaceDto deleteDto = new SpaceDto();
         deleteDto.setId(spaceId);
-        SpaceElementDto spaceelementtodelete = new SpaceElementDto();
-        spaceelementtodelete.setId(elementId);
+        SpaceElementDto spaceelementtodelete =SpaceElementDto.builder()
+                .elementId(elementId)
+                .build();
+
         deleteDto.setElements(List.of(spaceelementtodelete));
         HttpEntity<SpaceDto> deleteRequest = new HttpEntity<>(deleteDto, headers);
         //act
@@ -201,11 +203,13 @@ class ArenaControllerTest {
         String Spaceurl = "http://localhost:" + serverPort + "/api/v1/space/element";
         SpaceDto addDto = new SpaceDto();
         addDto.setId(spaceId);
-        SpaceElementDto spaceElementToAdd = new SpaceElementDto();
-        spaceElementToAdd.setId(element1Id);
-        spaceElementToAdd.setStatic(true);
-        spaceElementToAdd.setX(50);
-        spaceElementToAdd.setY(20);
+        SpaceElementDto spaceElementToAdd = SpaceElementDto.builder()
+                .elementId(element1Id)
+                .isStatic(true)
+                .x(50)
+                .y(20)
+                .build();
+
         addDto.setElements(List.of(spaceElementToAdd));
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("Authorization", "Bearer " + userToken);
@@ -228,11 +232,12 @@ class ArenaControllerTest {
         String Spaceurl = "http://localhost:" + serverPort + "/api/v1/space/element";
         SpaceDto addDto = new SpaceDto();
         addDto.setId(spaceId);
-        SpaceElementDto spaceElementToAdd = new SpaceElementDto();
-        spaceElementToAdd.setId(element1Id);
-        spaceElementToAdd.setStatic(true);
-        spaceElementToAdd.setX(100000);
-        spaceElementToAdd.setY(200000);
+        SpaceElementDto spaceElementToAdd = SpaceElementDto.builder()
+                .elementId(element1Id)
+                .isStatic(true)
+                .x(1000000)
+                .y(2000000)
+                .build();
         addDto.setElements(List.of(spaceElementToAdd));
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("Authorization", "Bearer " + userToken);

@@ -24,7 +24,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     database-platform: org.hibernate.dialect.PostgreSQLDialect
   datasource:
-    #    url: jdbc:postgresql://ep-soft-recipe-a189x52v.ap-southeast-1.aws.neon.tech/metaverse?sslmode=require
+    #    url: jdbc:postgresql://ep-soft-recipe-a189x52v.ap-southeast-1.aws.neon.tech/chat?sslmode=require
     url: jdbc:postgresql://ep-soft-recipe-a189x52v.ap-southeast-1.aws.neon.tech/test?sslmode=require
     username: learning_postgres_owner
     password: t8qELP1OjCFp

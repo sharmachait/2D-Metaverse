@@ -1,4 +1,4 @@
-package com.sharmachait.ws.models.entity;
+package com.sharmachait.ws.models.dto;
 
 public enum Status {
     ONLINE,

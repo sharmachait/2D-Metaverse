@@ -2,7 +2,7 @@
 //
 //import com.sharmachait.ws.models.entity.ChatMessage;
 //import com.sharmachait.ws.models.entity.Notification;
-//import com.sharmachait.ws.models.entity.User;
+//import com.sharmachait.ws.models.dto.UserDto;
 //import com.sharmachait.ws.service.ChatMessageService;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.http.HttpStatus;
@@ -46,7 +46,7 @@
 //    ){
 //        ChatMessage savedMessage = chatMessageService.save(chatMessage);
 //        Long userId = savedMessage.getRecipientId();
-//        User user = userRepository.findById(userId).orElse(null);
+//        UserDto user = userRepository.findById(userId).orElse(null);
 //        Notification notification = Notification.builder()
 //                .id(savedMessage.getId())
 //                .recipientId(savedMessage.getRecipientId())
