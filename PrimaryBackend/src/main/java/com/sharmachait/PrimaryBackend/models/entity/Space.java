@@ -1,5 +1,6 @@
 package com.sharmachait.PrimaryBackend.models.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,6 +28,11 @@ public class Space {
     )
     @JsonManagedReference
     private Set<SpaceElement> spaceElements;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "map_id", referencedColumnName = "id", nullable = false)
+    @JsonBackReference
+    private GameMap gameMap;
 
     @OneToOne(fetch = FetchType.EAGER)
     private User owner;

@@ -39,6 +39,7 @@ public class JwtProvider {
         }
         return String.join(",", authoritiesSet);
     }
+
     public static String getEmailFromToken(String token) throws Exception {
         if (token == null || !token.startsWith("Bearer "))
             throw new Exception("Invalid JWT token");
@@ -51,4 +52,18 @@ public class JwtProvider {
             throw new Exception(e);
         }
     }
+
+    public static String getIdFromToken(String token){
+        if (token == null || !token.startsWith("Bearer "))
+            return null;
+        String jwt = token.substring(7);
+        try {
+            SecretKey key = Keys.hmacShaKeyFor(JwtConstants.JWT_SECRET.getBytes());
+            Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(jwt).getBody();
+            return String.valueOf(claims.get("id"));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
 }

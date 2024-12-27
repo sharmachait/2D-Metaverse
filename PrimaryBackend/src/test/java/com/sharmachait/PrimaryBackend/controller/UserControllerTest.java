@@ -99,7 +99,7 @@ class UserControllerTest {
     @DisplayName("Update metadata with valid jwt valid avatar id should pass")
     void updateMetadataWithValidJwtValidAvatarIdShouldPass() {
         //arrange
-        String url = "http://localhost:" + serverPort + "/api/v1/user/metadata/"+userId;
+        String url = "http://localhost:" + serverPort + "/api/v1/user/metadata";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -142,15 +142,13 @@ class UserControllerTest {
 
     @Order(4)
     @Test
-    @DisplayName("Get Avatar information for user Id")
+    @DisplayName("Get Avatar information for user Ids")
     void getAvatarInformationForUserBulk() {
         //arrange
 
-        String url = "http://localhost:" +
-                serverPort +
-                "/api/v1/user/metadata/bulk?ids=[" +
-                userId +
-                "]";
+        String url = String.format("http://localhost:%s/api/v1/user/metadata/bulk?ids=%s",
+                serverPort,
+                userId);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -161,10 +159,10 @@ class UserControllerTest {
         ResponseEntity<List<AvatarDto>> response = restTemplate.exchange(url, HttpMethod.GET, request, new ParameterizedTypeReference<List<AvatarDto>>() {});
         List<AvatarDto> avatars = response.getBody();
 
-        assertEquals(response.getStatusCode(), HttpStatus.OK, "status code should be OK");
-        assertEquals(avatars.size(), 1, "Size of response body should be 1");
-        assertEquals(avatars.get(0).getUserId(), userId, "user ids should match");
-        assertEquals(avatars.get(0).getId(), avatarId, "avatar ids should match");
+        assertEquals(HttpStatus.OK, response.getStatusCode(),  "status code should be OK");
+        assertEquals(1, avatars.size(), "Size of response body should be 1");
+        assertEquals(userId, avatars.get(0).getUserId(),  "user ids should match");
+        assertEquals(avatarId, avatars.get(0).getId(),  "avatar ids should match");
     }
 
     @Order(5)
@@ -175,8 +173,7 @@ class UserControllerTest {
 
         String url = "http://localhost:" +
                 serverPort +
-                "/api/v1/user/metadata/" +
-                userId;
+                "/api/v1/user/metadata";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

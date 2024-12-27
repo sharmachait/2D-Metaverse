@@ -20,6 +20,7 @@ public class SpaceDto {
             message = "Dimensions must match the pattern: ^[0-9]{1,3}x[0-9]{1,3}$"
     )
     private String dimensions;
+    private String thumbnail;
     private String mapId;
     List<SpaceElementDto> elements;
 }

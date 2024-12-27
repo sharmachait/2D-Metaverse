@@ -211,25 +211,19 @@ class SpaceControllerTest {
 
     @Order(5)
     @Test
-    @DisplayName("User is not able to delete a space")
-    void userIsNotAbleToDeleteASpace() {
+    @DisplayName("User is able to delete a space")
+    void userIsAbleToDeleteASpace() {
         //arrange
-        String url = "http://localhost:" + serverPort + "/api/v1/space";
+        String url = "http://localhost:" + serverPort + "/api/v1/space"+spaceId;
 
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("Authorization", "Bearer " + userToken);
 
-        SpaceDto spaceDto = SpaceDto.builder()
-                .id(spaceId)
-//                .name("Test Space")
-//                .dimensions("100x200")
-//                .mapId(mapId)
-                .build();
 
-        HttpEntity<SpaceDto> request = new HttpEntity<>(spaceDto, headers);
+        HttpEntity<String> request = new HttpEntity<>( headers);
 
         //act
-        ResponseEntity<SpaceDto> spaceResponse = restTemplate.exchange(url, HttpMethod.DELETE, request, SpaceDto.class);
+        ResponseEntity<String> spaceResponse = restTemplate.exchange(url, HttpMethod.DELETE, request, String.class);
 
         // Assert that the response status is BAD_REQUEST (400)
         assertEquals(HttpStatus.OK, spaceResponse.getStatusCode(), "Expected a OK status for valid token");

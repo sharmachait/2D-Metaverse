@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class SpaceElementDto {
     private String elementId;
-    private String imageUrl;
     private boolean isStatic;
     private int x;
     private int y;
+
 }

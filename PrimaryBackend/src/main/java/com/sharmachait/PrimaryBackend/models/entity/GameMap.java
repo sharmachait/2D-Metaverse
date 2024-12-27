@@ -25,4 +25,12 @@ public class GameMap {
     )
     @JsonManagedReference
     private Set<MapElement> mapElements;
+
+    @OneToMany(
+            mappedBy = "gameMap",
+            fetch = FetchType.EAGER,
+            cascade = CascadeType.ALL
+    )
+    @JsonManagedReference
+    private Set<Space> spaces;
 }
