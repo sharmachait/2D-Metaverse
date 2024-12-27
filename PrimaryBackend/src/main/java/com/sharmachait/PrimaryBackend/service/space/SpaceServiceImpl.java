@@ -3,6 +3,7 @@ import com.sharmachait.PrimaryBackend.config.jwt.JwtProvider;
 import com.sharmachait.PrimaryBackend.models.dto.SpaceDto;
 import com.sharmachait.PrimaryBackend.models.dto.SpaceElementDto;
 import com.sharmachait.PrimaryBackend.models.entity.*;
+import com.sharmachait.PrimaryBackend.repository.ElementRepository;
 import com.sharmachait.PrimaryBackend.repository.SpaceRepository;
 import com.sharmachait.PrimaryBackend.service.element.ElementService;
 import com.sharmachait.PrimaryBackend.service.gameMap.GameMapService;
@@ -28,6 +29,7 @@ public class SpaceServiceImpl implements SpaceService {
     private final UserService userService;
     private final ElementService elementService;
     private final SpaceElementService spaceElementService;
+    private final ElementRepository elementRepository;
 
     @Override
     public Space findById(String id) throws NoSuchElementException {
@@ -69,7 +71,9 @@ public class SpaceServiceImpl implements SpaceService {
             spaceEntity.setHeight(gameMap.getHeight());
             spaceEntity.setWidth(gameMap.getWidth());
             for(MapElement mapElement: gameMap.getMapElements()){
-                spaceElements.add(mapToSpaceElement(mapElement, spaceEntity));
+                SpaceElement spaceElement = mapToSpaceElement(mapElement, spaceEntity);
+                spaceElement = spaceElementService.save(spaceElement);
+                spaceElements.add(spaceElement);
             }
         }
 
@@ -108,7 +112,6 @@ public class SpaceServiceImpl implements SpaceService {
                 .element(element)
                 .build();
 
-        spaceElement = spaceElementService.save(spaceElement);
         return spaceElement;
     }
 
@@ -124,7 +127,7 @@ public class SpaceServiceImpl implements SpaceService {
                 .element(element)
                 .build();
 
-        spaceElement = spaceElementService.save(spaceElement);
+
         return spaceElement;
     }
 
@@ -134,9 +137,38 @@ public class SpaceServiceImpl implements SpaceService {
     }
 
     @Override
+    @Transactional
+    public Space addElement(String authHeader, SpaceElementDto spaceElementDto, String spaceId) throws Exception {
+        String userId = JwtProvider.getIdFromToken(authHeader);
+
+        Space spaceEntity = spaceRepository.findById(spaceId).orElse(null);
+        if(spaceEntity==null){
+            throw new Exception("Space not found");
+        }
+        if(userId!=spaceEntity.getOwner().getId()){
+            throw new Exception("Unauthorized");
+        }
+        SpaceElement spaceElement = mapToSpaceElement(spaceElementDto, spaceEntity);
+        spaceElement = spaceElementService.save(spaceElement);
+        spaceEntity.getSpaceElements().add(spaceElement);
+        return spaceRepository.save(spaceEntity);
+    }
+
+    @Override
     public List<Space> findByUserId(String authHeader) {
         String userId = JwtProvider.getIdFromToken(authHeader);
         return spaceRepository.findByOwnerId(userId);
+    }
+
+    public SpaceDto mapSpaceToSpaceDto(Space spaceEntity) {
+        SpaceDto spaceDto = SpaceDto.builder()
+                .mapId(spaceEntity.getGameMap().getId())
+                .name(spaceEntity.getName())
+                .dimensions(spaceEntity.getHeight()+"x"+spaceEntity.getWidth())
+                .thumbnail(spaceEntity.getThumbnail())
+                .id(spaceEntity.getId())
+                .build();
+        return spaceDto;
     }
 
 
