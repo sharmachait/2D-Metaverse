@@ -23,7 +23,7 @@ public class MapElement {
     @JoinColumn(name = "element_id", referencedColumnName = "id", nullable = false)
     @JsonBackReference
     private Element element;
-    private boolean isStatic;
+//    private boolean isStatic;
     private int x;
     private int y;
 }

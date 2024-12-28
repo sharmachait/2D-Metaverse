@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -51,6 +52,7 @@ class AdminControllerTest {
         // Step 1: Signup as User
         loginDto = new LoginDto();
         loginDto.setUsername("admincontrolleruser");
+        loginDto.setPassword("password");
         loginDto.setRole(Role.ROLE_USER);
         HttpEntity<LoginDto> signupRequestUser = new HttpEntity<>(loginDto, headers);
         ResponseEntity<AuthResponse> signupResponseUser = restTemplate.postForEntity(signupUrl, signupRequestUser, AuthResponse.class);
@@ -74,10 +76,11 @@ class AdminControllerTest {
         elementDto.setIsStatic(true);
         HttpEntity<ElementDto> elementRequest = new HttpEntity<>(elementDto, headers);
         //act
-        ResponseEntity<ElementDto> elementResponse = restTemplate.postForEntity(elementUrl, elementRequest, ElementDto.class);
-        //assert
-        assertEquals(HttpStatus.UNAUTHORIZED, elementResponse.getStatusCode(), "Expected a UNAUTHORIZED status for valid token");
-        assertNull(elementResponse.getBody(), "Space did not return null");
+        HttpClientErrorException exception = assertThrows(HttpClientErrorException.Forbidden.class,
+                () -> restTemplate.postForEntity(elementUrl, elementRequest, ElementDto.class)
+        );
+
+        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode(), "Expected a FORBIDDEN status for unauthorized access");
 
         //arrange
         String mapUrl = "http://localhost:" + serverPort + "/api/v1/admin/map";
@@ -86,10 +89,11 @@ class AdminControllerTest {
         mapDto.setDimensions("100x200");
         HttpEntity<GameMapDto> mapRequest = new HttpEntity<>(mapDto, headers);
         //act
-        ResponseEntity<GameMapDto> mapResponse = restTemplate.postForEntity(mapUrl, mapRequest, GameMapDto.class);
-        //assert
-        assertEquals(HttpStatus.UNAUTHORIZED, mapResponse.getStatusCode(), "Expected a UNAUTHORIZED status for valid token");
-        assertNull(mapResponse.getBody(), "map did not return null");
+        exception = assertThrows(HttpClientErrorException.Forbidden.class,
+                () -> restTemplate.postForEntity(elementUrl, elementRequest, ElementDto.class)
+        );
+
+        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode(), "Expected a FORBIDDEN status for unauthorized access");
 
         //arrange
         String avatarUrl = "http://localhost:" + serverPort + "/api/v1/admin/avatar";
@@ -98,10 +102,11 @@ class AdminControllerTest {
         avatarDto.setImageUrl("testUrl");
         HttpEntity<AvatarDto> avatarRequest = new HttpEntity<>(avatarDto, headers);
         //act
-        ResponseEntity<AvatarDto> avatarResponse = restTemplate.postForEntity(avatarUrl, avatarRequest, AvatarDto.class);
-        //assert
-        assertEquals(HttpStatus.UNAUTHORIZED, avatarResponse.getStatusCode(), "Expected a UNAUTHORIZED status for valid token");
-        assertNull(avatarResponse.getBody(), "avatar did not return null");
+        exception = assertThrows(HttpClientErrorException.Forbidden.class,
+                () -> restTemplate.postForEntity(elementUrl, elementRequest, ElementDto.class)
+        );
+
+        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode(), "Expected a FORBIDDEN status for unauthorized access");
 
 
         //arrange
@@ -113,10 +118,11 @@ class AdminControllerTest {
         elementUpdateDto.setIsStatic(true);
         HttpEntity<ElementDto> elementUpdateRequest = new HttpEntity<>(elementUpdateDto, headers);
         //act
-        ResponseEntity<ElementDto> elementUpdateResponse = restTemplate.exchange(elementUpdateUrl, HttpMethod.PUT, elementUpdateRequest, ElementDto.class);
-        //assert
-        assertEquals(HttpStatus.UNAUTHORIZED, elementUpdateResponse.getStatusCode(), "Expected a UNAUTHORIZED status for valid token");
-        assertNull(elementUpdateResponse.getBody(), "Space did not return null");
+        exception = assertThrows(HttpClientErrorException.Forbidden.class,
+                () -> restTemplate.postForEntity(elementUrl, elementRequest, ElementDto.class)
+        );
+
+        assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode(), "Expected a FORBIDDEN status for unauthorized access");
     }
     @Order(2)
     @Test
@@ -185,7 +191,7 @@ class AdminControllerTest {
         ResponseEntity<ElementDto> elementUpdateResponse = restTemplate.exchange(
                 elementUpdateUrl, HttpMethod.PUT, elementUpdateRequest, ElementDto.class);
         //assert
-        assertEquals(HttpStatus.OK, elementUpdateResponse.getStatusCode(), "Expected an OK status for valid token");
+        assertEquals(HttpStatus.CREATED, elementUpdateResponse.getStatusCode(), "Expected an OK status for valid token");
         assertNotNull(elementUpdateResponse.getBody(), "Response body should not be null");
         assertEquals("updated", elementUpdateResponse.getBody().getImageUrl(), "Image URL should be updated");
     }

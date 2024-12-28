@@ -179,7 +179,7 @@ public class SpaceServiceImpl implements SpaceService {
             SpaceElementDto spaceElementDto = SpaceElementDto.builder()
                     .y(spaceElement.getY())
                     .x(spaceElement.getX())
-                    .isStatic(spaceElement.isStatic())
+                    .isStatic(spaceElement.getElement().isStatic())
                     .elementId(spaceElement.getId())
                     .build();
             spaceElementDtos.add(spaceElementDto);
@@ -187,14 +187,14 @@ public class SpaceServiceImpl implements SpaceService {
         spaceDto.setElements(spaceElementDtos);
         return spaceDto;
     }
-    public SpaceElement mapToSpaceElement(SpaceElementDto spaceElementDto, Space spaceEntity) {
+    public SpaceElement mapToSpaceElement(SpaceElementDto spaceElementDto, Space spaceEntity) throws Exception {
         Element element = elementService.getElementById(spaceElementDto.getElementId());
 
         SpaceElement spaceElement = SpaceElement.builder()
                 .space(spaceEntity)
                 .x(spaceElementDto.getX())
                 .y(spaceElementDto.getY())
-                .isStatic(spaceElementDto.isStatic())
+//                .isStatic(element.isStatic())
                 .element(element)
                 .build();
 
@@ -209,7 +209,7 @@ public class SpaceServiceImpl implements SpaceService {
                 .space(spaceEntity)
                 .x(mapElement.getX())
                 .y(mapElement.getY())
-                .isStatic(mapElement.isStatic())
+//                .isStatic(element.isStatic())
                 .element(element)
                 .build();
 

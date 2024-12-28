@@ -18,7 +18,7 @@ public class Element {
     private int height;
     private int width;
     private String imageUrl;
-
+    private boolean isStatic;
     @OneToMany(
             mappedBy = "element",
             fetch = FetchType.EAGER,
@@ -34,4 +34,5 @@ public class Element {
     )
     @JsonManagedReference
     private Set<MapElement> mapElements;
+
 }
