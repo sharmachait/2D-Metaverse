@@ -25,6 +25,8 @@ public class User {
     private Avatar avatar;
 
     private Role role;
+
     @OneToOne(mappedBy = "owner")
+    @JsonBackReference
     private Space adminSpace;
 }

@@ -22,5 +22,6 @@ public class SpaceDto {
     private String dimensions;
     private String thumbnail;
     private String mapId;
+    private String ownerId;
     List<SpaceElementDto> elements;
 }

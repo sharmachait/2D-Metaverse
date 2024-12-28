@@ -4,6 +4,7 @@ import com.sharmachait.PrimaryBackend.models.dto.SpaceDto;
 import com.sharmachait.PrimaryBackend.models.dto.SpaceElementDto;
 import com.sharmachait.PrimaryBackend.models.entity.*;
 import com.sharmachait.PrimaryBackend.repository.ElementRepository;
+import com.sharmachait.PrimaryBackend.repository.SpaceElementRepository;
 import com.sharmachait.PrimaryBackend.repository.SpaceRepository;
 import com.sharmachait.PrimaryBackend.service.element.ElementService;
 import com.sharmachait.PrimaryBackend.service.gameMap.GameMapService;
@@ -15,10 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -30,10 +28,13 @@ public class SpaceServiceImpl implements SpaceService {
     private final ElementService elementService;
     private final SpaceElementService spaceElementService;
     private final ElementRepository elementRepository;
+    private final SpaceElementRepository spaceElementRepository;
 
     @Override
-    public Space findById(String id) throws NoSuchElementException {
-        return spaceRepository.findById(id).get();
+    public SpaceDto findById(String id) throws NoSuchElementException {
+        Space space =  spaceRepository.findById(id).get();
+        SpaceDto spaceDto = mapSpaceToSpaceDto(space);
+        return spaceDto;
     }
 
     @Transactional
@@ -100,37 +101,6 @@ public class SpaceServiceImpl implements SpaceService {
         }
     }
 
-    @Transactional
-    public SpaceElement mapToSpaceElement(SpaceElementDto spaceElementDto, Space spaceEntity) {
-        Element element = elementService.getElementById(spaceElementDto.getElementId());
-
-        SpaceElement spaceElement = SpaceElement.builder()
-                .space(spaceEntity)
-                .x(spaceElementDto.getX())
-                .y(spaceElementDto.getY())
-                .isStatic(spaceElementDto.isStatic())
-                .element(element)
-                .build();
-
-        return spaceElement;
-    }
-
-    @Transactional
-    public SpaceElement mapToSpaceElement(MapElement mapElement, Space spaceEntity) {
-        Element element = mapElement.getElement();
-
-        SpaceElement spaceElement = SpaceElement.builder()
-                .space(spaceEntity)
-                .x(mapElement.getX())
-                .y(mapElement.getY())
-                .isStatic(mapElement.isStatic())
-                .element(element)
-                .build();
-
-
-        return spaceElement;
-    }
-
     @Override
     public Space save(Space space) {
         return spaceRepository.save(space);
@@ -145,7 +115,7 @@ public class SpaceServiceImpl implements SpaceService {
         if(spaceEntity==null){
             throw new Exception("Space not found");
         }
-        if(userId!=spaceEntity.getOwner().getId()){
+        if(!Objects.equals(userId, spaceEntity.getOwner().getId())){
             throw new Exception("Unauthorized");
         }
         SpaceElement spaceElement = mapToSpaceElement(spaceElementDto, spaceEntity);
@@ -155,21 +125,95 @@ public class SpaceServiceImpl implements SpaceService {
     }
 
     @Override
-    public List<Space> findByUserId(String authHeader) {
+    public List<SpaceDto> findByUserId(String authHeader) {
         String userId = JwtProvider.getIdFromToken(authHeader);
-        return spaceRepository.findByOwnerId(userId);
+        User owner = userService.findById(userId);
+        List<Space> spaces = spaceRepository.findByOwner(owner);
+        List<SpaceDto> spaceDtos = new ArrayList<>();
+        for(Space space: spaces){
+            SpaceDto spaceDto = mapSpaceToSpaceDto(space);
+            spaceDtos.add(spaceDto);
+        }
+        return spaceDtos;
+    }
+
+    @Override
+    @Transactional
+    public Space deleteElement(String authHeader, String elementId) throws Exception {
+
+        SpaceElement spaceElement = spaceElementRepository.findById(elementId).orElse(null);
+        if(spaceElement == null){
+            throw new Exception("Element Not Found");
+        }
+        String userId = JwtProvider.getIdFromToken(authHeader);
+        Space space = spaceRepository.findById(spaceElement.getSpace().getId()).orElse(null);
+        if(space == null){
+            throw new Exception("Space Not Found");
+        }
+        if(!Objects.equals(userId, space.getOwner().getId())) {
+            throw new Exception("Unauthorized");
+        }
+        for(SpaceElement se : space.getSpaceElements()){
+            if(se.getId().equals(spaceElement.getId())){
+                spaceElement=se;
+                break;
+            }
+        }
+        space.getSpaceElements().remove(spaceElement);
+        spaceElementRepository.delete(spaceElement);
+        space = spaceRepository.save(space);
+        return space;
     }
 
     public SpaceDto mapSpaceToSpaceDto(Space spaceEntity) {
         SpaceDto spaceDto = SpaceDto.builder()
-                .mapId(spaceEntity.getGameMap().getId())
+                .mapId(spaceEntity.getGameMap() == null ? null: spaceEntity.getGameMap().getId())
                 .name(spaceEntity.getName())
                 .dimensions(spaceEntity.getHeight()+"x"+spaceEntity.getWidth())
                 .thumbnail(spaceEntity.getThumbnail())
+                .ownerId(spaceEntity.getOwner().getId())
                 .id(spaceEntity.getId())
                 .build();
+        List<SpaceElementDto> spaceElementDtos = new ArrayList<>();
+        for(SpaceElement spaceElement : spaceEntity.getSpaceElements()){
+            SpaceElementDto spaceElementDto = SpaceElementDto.builder()
+                    .y(spaceElement.getY())
+                    .x(spaceElement.getX())
+                    .isStatic(spaceElement.isStatic())
+                    .elementId(spaceElement.getId())
+                    .build();
+            spaceElementDtos.add(spaceElementDto);
+        }
+        spaceDto.setElements(spaceElementDtos);
         return spaceDto;
+    }
+    public SpaceElement mapToSpaceElement(SpaceElementDto spaceElementDto, Space spaceEntity) {
+        Element element = elementService.getElementById(spaceElementDto.getElementId());
+
+        SpaceElement spaceElement = SpaceElement.builder()
+                .space(spaceEntity)
+                .x(spaceElementDto.getX())
+                .y(spaceElementDto.getY())
+                .isStatic(spaceElementDto.isStatic())
+                .element(element)
+                .build();
+
+        return spaceElement;
     }
 
 
+    public SpaceElement mapToSpaceElement(MapElement mapElement, Space spaceEntity) {
+        Element element = mapElement.getElement();
+
+        SpaceElement spaceElement = SpaceElement.builder()
+                .space(spaceEntity)
+                .x(mapElement.getX())
+                .y(mapElement.getY())
+                .isStatic(mapElement.isStatic())
+                .element(element)
+                .build();
+
+
+        return spaceElement;
+    }
 }

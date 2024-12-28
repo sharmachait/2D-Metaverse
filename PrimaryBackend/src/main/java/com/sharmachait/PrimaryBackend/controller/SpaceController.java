@@ -3,7 +3,6 @@ package com.sharmachait.PrimaryBackend.controller;
 import com.sharmachait.PrimaryBackend.models.dto.SpaceDto;
 import com.sharmachait.PrimaryBackend.models.dto.SpaceElementDto;
 import com.sharmachait.PrimaryBackend.models.entity.Space;
-import com.sharmachait.PrimaryBackend.repository.SpaceRepository;
 import com.sharmachait.PrimaryBackend.service.space.SpaceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +17,7 @@ import java.util.List;
 @RequestMapping("/api/v1/space")
 public class SpaceController {
     private final SpaceService spaceService;
-    private final SpaceRepository spaceRepository;
+
     @PostMapping
     public ResponseEntity<?> postSpace(@RequestBody @Valid SpaceDto spaceDto, @RequestHeader("Authorization") String authHeader) {
         try{
@@ -28,10 +27,11 @@ public class SpaceController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+
     @GetMapping("/all")
     public ResponseEntity<?> getSpaces(@RequestHeader("Authorization") String authHeader) {
         try{
-            List<Space> spaces = spaceService.findByUserId(authHeader);
+            List<SpaceDto> spaces = spaceService.findByUserId(authHeader);
             return ResponseEntity.status(HttpStatus.OK).body(spaces);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -48,11 +48,16 @@ public class SpaceController {
         }
     }
 //
-//    @GetMapping("/{spaceId}")
-////    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-//    public ResponseEntity<?> getSpace(@PathVariable String spaceId) {
-//
-//    }
+    @GetMapping("/{spaceId}")
+    public ResponseEntity<?> getSpace(@PathVariable String spaceId) {
+        try{
+            SpaceDto space = spaceService.findById(spaceId);
+            return ResponseEntity.status(HttpStatus.OK).body(space);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
+        }
+    }
 //
     @PostMapping("/element/{spaceId}")
     public ResponseEntity<?> postSpaceElement(
@@ -67,10 +72,16 @@ public class SpaceController {
                     .body(e.getMessage());
         }
     }
-//
-//    @DeleteMapping("/element/{spaceId}")
-////    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-//    public ResponseEntity<?> deleteSpaceElement(@RequestBody SpaceElementDto spaceElementDto, @PathVariable String spaceId) {
-//
-//    }
+
+    @DeleteMapping("/space/element/{elementId}")
+    public ResponseEntity<?> deleteSpaceElement(@PathVariable String elementId,
+                                                @RequestHeader("Authorization") String authHeader) {
+        try{
+            Space space = spaceService.deleteElement(authHeader,  elementId);
+            return ResponseEntity.status(HttpStatus.OK).body(space);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
+        }
+    }
 }

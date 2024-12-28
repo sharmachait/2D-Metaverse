@@ -30,7 +30,7 @@ public class Space {
     private Set<SpaceElement> spaceElements;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "map_id", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "map_id", referencedColumnName = "id", nullable = true)
     @JsonBackReference
     private GameMap gameMap;
 
