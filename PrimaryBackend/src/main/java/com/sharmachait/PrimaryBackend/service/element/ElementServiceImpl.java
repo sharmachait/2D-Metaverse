@@ -6,6 +6,9 @@ import com.sharmachait.PrimaryBackend.repository.ElementRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class ElementServiceImpl implements ElementService {
@@ -34,6 +37,11 @@ public class ElementServiceImpl implements ElementService {
 //        element.setStatic(elementDto.getIsStatic());
         element.setImageUrl(elementDto.getImageUrl());
         return save(element);
+    }
+
+    @Override
+    public List<ElementDto> getAllElements() {
+        return elementRepository.findAll().stream().map(this::mapElementToDto).collect(Collectors.toList());
     }
 
     public ElementDto mapElementToDto(Element element) {

@@ -1,14 +1,12 @@
 package com.sharmachait.PrimaryBackend.controller;
 import com.sharmachait.PrimaryBackend.models.dto.*;
 import com.sharmachait.PrimaryBackend.models.entity.Role;
-import com.sharmachait.PrimaryBackend.models.entity.Space;
 import com.sharmachait.PrimaryBackend.models.response.AuthResponse;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
@@ -61,49 +59,49 @@ class SpaceControllerTest {
         userId = authResponseUser.getUserId();
 
         // Step 2: Create Elements
-//        String elementUrl = "http://localhost:" + serverPort + "/api/v1/admin/element";
-//        headers.add("Authorization", "Bearer " + adminToken);
-//        ElementDto elementDto = new ElementDto();
-//        elementDto.setImageUrl("https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE");
-//        elementDto.setWidth(1);
-//        elementDto.setHeight(1);
-//        elementDto.setIsStatic(true);
-//        HttpEntity<ElementDto> elementRequest = new HttpEntity<>(elementDto, headers);
-//        ResponseEntity<ElementDto> elementResponse = restTemplate.postForEntity(elementUrl, elementRequest, ElementDto.class);
-//        ResponseEntity<ElementDto> elementResponse2 = restTemplate.postForEntity(elementUrl, elementRequest, ElementDto.class);
-//        element1Id = elementResponse.getBody().getId();
-//        element2Id = elementResponse2.getBody().getId();
-//
-//        // Step 3: Create Map
-//        String mapUrl = "http://localhost:" + serverPort + "/api/v1/admin/map";
-//        GameMapDto mapDto = new GameMapDto();
-//        mapDto.setThumbnail("https://thumbnail.com/a.png");
-//        mapDto.setDimensions("100x200");
-//        MapElementDto mapElement1 = MapElementDto.builder()
-//                .elementId(element1Id)
-//                .x(20)
-//                .y(20)
-//                .build();
-//        MapElementDto mapElement2 = MapElementDto.builder()
-//                .elementId(element1Id)
-//                .x(18)
-//                .y(20)
-//                .build();
-//        MapElementDto mapElement3 = MapElementDto.builder()
-//                .elementId(element2Id)
-//                .x(19)
-//                .y(20)
-//                .build();
-//        MapElementDto mapElement4 = MapElementDto.builder()
-//                .elementId(element2Id)
-//                .x(19)
-//                .y(20)
-//                .build();
-//        List<MapElementDto> l = List.of(mapElement1, mapElement2, mapElement3, mapElement4);
-//        mapDto.setMapElements(l);
-//        HttpEntity<GameMapDto> mapRequest = new HttpEntity<>(mapDto, headers);
-//        ResponseEntity<GameMapDto> mapResponse = restTemplate.postForEntity(mapUrl, mapRequest, GameMapDto.class);
-//        mapId = mapResponse.getBody().getId();
+        String elementUrl = "http://localhost:" + serverPort + "/api/v1/admin/element";
+        headers.add("Authorization", "Bearer " + adminToken);
+        ElementDto elementDto = new ElementDto();
+        elementDto.setImageUrl("https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE");
+        elementDto.setWidth(1);
+        elementDto.setHeight(1);
+        elementDto.setIsStatic(true);
+        HttpEntity<ElementDto> elementRequest = new HttpEntity<>(elementDto, headers);
+        ResponseEntity<ElementDto> elementResponse = restTemplate.postForEntity(elementUrl, elementRequest, ElementDto.class);
+        ResponseEntity<ElementDto> elementResponse2 = restTemplate.postForEntity(elementUrl, elementRequest, ElementDto.class);
+        element1Id = elementResponse.getBody().getId();
+        element2Id = elementResponse2.getBody().getId();
+
+        // Step 3: Create Map
+        String mapUrl = "http://localhost:" + serverPort + "/api/v1/admin/map";
+        GameMapDto mapDto = new GameMapDto();
+        mapDto.setThumbnail("https://thumbnail.com/a.png");
+        mapDto.setDimensions("100x200");
+        MapElementDto mapElement1 = MapElementDto.builder()
+                .elementId(element1Id)
+                .x(20)
+                .y(20)
+                .build();
+        MapElementDto mapElement2 = MapElementDto.builder()
+                .elementId(element1Id)
+                .x(18)
+                .y(20)
+                .build();
+        MapElementDto mapElement3 = MapElementDto.builder()
+                .elementId(element2Id)
+                .x(19)
+                .y(20)
+                .build();
+        MapElementDto mapElement4 = MapElementDto.builder()
+                .elementId(element2Id)
+                .x(19)
+                .y(20)
+                .build();
+        List<MapElementDto> l = List.of(mapElement1, mapElement2, mapElement3, mapElement4);
+        mapDto.setMapElements(l);
+        HttpEntity<GameMapDto> mapRequest = new HttpEntity<>(mapDto, headers);
+        ResponseEntity<GameMapDto> mapResponse = restTemplate.postForEntity(mapUrl, mapRequest, GameMapDto.class);
+        mapId = mapResponse.getBody().getId();
     }
 
     @Order(1)
