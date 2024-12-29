@@ -1,9 +1,11 @@
 package com.sharmachait.PrimaryBackend.controller;
 
 import com.sharmachait.PrimaryBackend.config.jwt.JwtProvider;
+import com.sharmachait.PrimaryBackend.models.dto.AvatarDto;
 import com.sharmachait.PrimaryBackend.models.dto.UserDto;
 import com.sharmachait.PrimaryBackend.models.entity.Avatar;
 import com.sharmachait.PrimaryBackend.models.entity.User;
+import com.sharmachait.PrimaryBackend.repository.AvatarRepository;
 import com.sharmachait.PrimaryBackend.service.avatar.AvatarService;
 import com.sharmachait.PrimaryBackend.service.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +23,7 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
     private final AvatarService avatarService;
-
+    private final AvatarRepository avatarRepository;
     @GetMapping("/metadata")
     public ResponseEntity<UserDto> metadata(
             @RequestHeader("Authorization") String authorizationHeader
@@ -45,11 +47,7 @@ public class UserController {
             @RequestBody UserDto userDto) {
         Avatar avatar;
         String userId = JwtProvider.getIdFromToken(authorizationHeader);
-        try{
-            avatar = avatarService.findById(userDto.getAvatarId());
-        }catch (Exception e){
-            avatar = null;
-        }
+        avatar = avatarRepository.findById(userDto.getAvatarId()).orElse(null);
         User user = userService.findById(userId);
         user.setAvatar(avatar);
 //      user.setRole(userDto.getRole());

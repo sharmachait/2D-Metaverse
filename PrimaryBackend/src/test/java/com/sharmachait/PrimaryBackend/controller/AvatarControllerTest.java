@@ -71,7 +71,7 @@ class AvatarControllerTest {
 
         String url = "http://localhost:" +
                 serverPort +
-                "/api/v1/avatars";
+                "/api/v1/avatar";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -82,7 +82,7 @@ class AvatarControllerTest {
         ResponseEntity<List<AvatarDto>> response = restTemplate.exchange(url, HttpMethod.GET, request, new ParameterizedTypeReference<List<AvatarDto>>() {});
         List<AvatarDto> avatars = response.getBody();
 
-        assertEquals(response.getStatusCode(), HttpStatus.OK, "status code should be OK");
+        assertEquals(response.getStatusCode(), HttpStatus.CREATED, "status code should be OK");
         assertNotEquals(0, avatars.size(), "Size of response body should be greater than 0");
         AvatarDto avatar = avatars.stream()
                 .filter(a -> a.getId().equals(avatarId))

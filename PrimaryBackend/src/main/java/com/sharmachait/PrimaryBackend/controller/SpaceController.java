@@ -2,7 +2,6 @@ package com.sharmachait.PrimaryBackend.controller;
 
 import com.sharmachait.PrimaryBackend.models.dto.SpaceDto;
 import com.sharmachait.PrimaryBackend.models.dto.SpaceElementDto;
-import com.sharmachait.PrimaryBackend.models.entity.Space;
 import com.sharmachait.PrimaryBackend.service.space.SpaceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +20,7 @@ public class SpaceController {
     @PostMapping
     public ResponseEntity<?> postSpace(@RequestBody @Valid SpaceDto spaceDto, @RequestHeader("Authorization") String authHeader) {
         try{
-            Space space = spaceService.save(authHeader, spaceDto);
+            SpaceDto space = spaceService.save(authHeader, spaceDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(space);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -65,7 +64,7 @@ public class SpaceController {
             @PathVariable String spaceId,
             @RequestHeader("Authorization") String authHeader) {
         try{
-            Space space = spaceService.addElement(authHeader, spaceElementDto, spaceId);
+            SpaceDto space = spaceService.addElement(authHeader, spaceElementDto, spaceId);
             return ResponseEntity.status(HttpStatus.CREATED).body(space);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -77,7 +76,7 @@ public class SpaceController {
     public ResponseEntity<?> deleteSpaceElement(@PathVariable String elementId,
                                                 @RequestHeader("Authorization") String authHeader) {
         try{
-            Space space = spaceService.deleteElement(authHeader,  elementId);
+            SpaceDto space = spaceService.deleteElement(authHeader,  elementId);
             return ResponseEntity.status(HttpStatus.OK).body(space);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
