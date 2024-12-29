@@ -25,7 +25,7 @@ public class GameMap {
     )
     @JsonManagedReference
     private Set<MapElement> mapElements;
-
+    private String thumbnail;
     @OneToMany(
             mappedBy = "gameMap",
             fetch = FetchType.EAGER,

@@ -10,7 +10,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MapElementDto {
+    private String id;
     private String elementId;
+    private String gameMapId;
     private int x;
     private int y;
 }

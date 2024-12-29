@@ -39,7 +39,7 @@ public class SpaceServiceImpl implements SpaceService {
 
     @Transactional
     @Override
-    public Space save(String authHeader, SpaceDto spaceDto) {
+    public SpaceDto save(String authHeader, SpaceDto spaceDto) {
         int xIndex = spaceDto.getDimensions().indexOf('x');
         String height = spaceDto.getDimensions().substring(0,xIndex);
         String width = spaceDto.getDimensions().substring(xIndex+1);
@@ -62,7 +62,7 @@ public class SpaceServiceImpl implements SpaceService {
                 .name(spaceDto.getName())
                 .height(Integer.parseInt(height))
                 .width(Integer.parseInt(width))
-                .thumbnail(spaceDto.getThumbnail())
+//                .thumbnail(spaceDto.getThumbnail())
                 .owner(owner)
                 .build();
 
@@ -71,20 +71,25 @@ public class SpaceServiceImpl implements SpaceService {
             gameMap = gameMapService.save(gameMap);
             spaceEntity.setHeight(gameMap.getHeight());
             spaceEntity.setWidth(gameMap.getWidth());
+
             for(MapElement mapElement: gameMap.getMapElements()){
-                SpaceElement spaceElement = mapToSpaceElement(mapElement, spaceEntity);
+                SpaceElement spaceElement = mapMapElementDtoToSpaceElement(mapElement, spaceEntity);
                 spaceElement = spaceElementService.save(spaceElement);
                 spaceElements.add(spaceElement);
             }
         }
-
+        if(spaceDto.getThumbnail() != null) {
+            spaceEntity.setThumbnail(spaceDto.getThumbnail());
+        }else if(gameMap!=null ) {
+            spaceEntity.setThumbnail(gameMap.getThumbnail());
+        }
         spaceEntity.setGameMap(gameMap);
 //        for(SpaceElementDto spaceElementDto : spaceDto.getElements()){
 //            spaceElements.add(mapToSpaceElement(spaceElementDto, spaceEntity));
 //        }
 
         spaceEntity.setSpaceElements(spaceElements);
-        return spaceRepository.save(spaceEntity);
+        return mapSpaceToSpaceDto(spaceRepository.save(spaceEntity));
     }
 
     @Transactional
@@ -108,7 +113,7 @@ public class SpaceServiceImpl implements SpaceService {
 
     @Override
     @Transactional
-    public Space addElement(String authHeader, SpaceElementDto spaceElementDto, String spaceId) throws Exception {
+    public SpaceDto addElement(String authHeader, SpaceElementDto spaceElementDto, String spaceId) throws Exception {
         String userId = JwtProvider.getIdFromToken(authHeader);
 
         Space spaceEntity = spaceRepository.findById(spaceId).orElse(null);
@@ -118,10 +123,10 @@ public class SpaceServiceImpl implements SpaceService {
         if(!Objects.equals(userId, spaceEntity.getOwner().getId())){
             throw new Exception("Unauthorized");
         }
-        SpaceElement spaceElement = mapToSpaceElement(spaceElementDto, spaceEntity);
+        SpaceElement spaceElement = mapSpaceElementDtoToSpaceElement(spaceElementDto, spaceEntity);
         spaceElement = spaceElementService.save(spaceElement);
         spaceEntity.getSpaceElements().add(spaceElement);
-        return spaceRepository.save(spaceEntity);
+        return mapSpaceToSpaceDto(spaceRepository.save(spaceEntity));
     }
 
     @Override
@@ -139,7 +144,7 @@ public class SpaceServiceImpl implements SpaceService {
 
     @Override
     @Transactional
-    public Space deleteElement(String authHeader, String elementId) throws Exception {
+    public SpaceDto deleteElement(String authHeader, String elementId) throws Exception {
 
         SpaceElement spaceElement = spaceElementRepository.findById(elementId).orElse(null);
         if(spaceElement == null){
@@ -162,7 +167,7 @@ public class SpaceServiceImpl implements SpaceService {
         space.getSpaceElements().remove(spaceElement);
         spaceElementRepository.delete(spaceElement);
         space = spaceRepository.save(space);
-        return space;
+        return mapSpaceToSpaceDto(space);
     }
 
     public SpaceDto mapSpaceToSpaceDto(Space spaceEntity) {
@@ -187,7 +192,7 @@ public class SpaceServiceImpl implements SpaceService {
         spaceDto.setElements(spaceElementDtos);
         return spaceDto;
     }
-    public SpaceElement mapToSpaceElement(SpaceElementDto spaceElementDto, Space spaceEntity) throws Exception {
+    public SpaceElement mapSpaceElementDtoToSpaceElement(SpaceElementDto spaceElementDto, Space spaceEntity) throws Exception {
         Element element = elementService.getElementById(spaceElementDto.getElementId());
 
         SpaceElement spaceElement = SpaceElement.builder()
@@ -198,11 +203,11 @@ public class SpaceServiceImpl implements SpaceService {
                 .element(element)
                 .build();
 
+
         return spaceElement;
     }
 
-
-    public SpaceElement mapToSpaceElement(MapElement mapElement, Space spaceEntity) {
+    public SpaceElement mapMapElementDtoToSpaceElement(MapElement mapElement, Space spaceEntity) {
         Element element = mapElement.getElement();
 
         SpaceElement spaceElement = SpaceElement.builder()

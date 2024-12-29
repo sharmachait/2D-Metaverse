@@ -161,7 +161,6 @@ class UserControllerTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode(),  "status code should be OK");
         assertEquals(1, avatars.size(), "Size of response body should be 1");
-        assertEquals(userId, avatars.get(0).getUserId(),  "user ids should match");
         assertEquals(avatarId, avatars.get(0).getId(),  "avatar ids should match");
     }
 

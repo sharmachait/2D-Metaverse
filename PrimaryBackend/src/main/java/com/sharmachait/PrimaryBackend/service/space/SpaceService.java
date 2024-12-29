@@ -9,10 +9,11 @@ import java.util.NoSuchElementException;
 
 public interface SpaceService {
     SpaceDto findById(String id) throws NoSuchElementException;
-    Space save(String authHeader, SpaceDto spaceDto);
+//    Space save(String authHeader, SpaceDto spaceDto);
+    SpaceDto save(String authHeader, SpaceDto spaceDto);
     void deleteById(String authHeader, String spaceId) throws Exception;
     Space save(Space spaceDto);
-    Space addElement(String authHeader, SpaceElementDto spaceElementDto, String spaceId) throws Exception;
+    SpaceDto addElement(String authHeader, SpaceElementDto spaceElementDto, String spaceId) throws Exception;
     List<SpaceDto> findByUserId(String authHeader);
-    Space deleteElement(String authHeader,  String elementId) throws Exception;
+    SpaceDto deleteElement(String authHeader,  String elementId) throws Exception;
 }

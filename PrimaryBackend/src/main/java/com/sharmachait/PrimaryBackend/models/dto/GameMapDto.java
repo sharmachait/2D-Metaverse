@@ -17,6 +17,7 @@ public class GameMapDto {
             regexp = "^[0-9]{1,3}x[0-9]{1,3}$",
             message = "Dimensions must match the pattern: ^[0-9]{1,3}x[0-9]{1,3}$"
     )
+    private String name;
     private String dimensions;
     private List<MapElementDto> mapElements;
 }

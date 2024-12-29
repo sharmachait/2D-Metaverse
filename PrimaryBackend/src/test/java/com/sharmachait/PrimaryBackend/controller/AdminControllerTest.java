@@ -6,12 +6,10 @@ import com.sharmachait.PrimaryBackend.models.response.AuthResponse;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -90,7 +88,7 @@ class AdminControllerTest {
         HttpEntity<GameMapDto> mapRequest = new HttpEntity<>(mapDto, headers);
         //act
         exception = assertThrows(HttpClientErrorException.Forbidden.class,
-                () -> restTemplate.postForEntity(elementUrl, elementRequest, ElementDto.class)
+                () -> restTemplate.postForEntity(mapUrl, elementRequest, ElementDto.class)
         );
 
         assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode(), "Expected a FORBIDDEN status for unauthorized access");
@@ -103,7 +101,7 @@ class AdminControllerTest {
         HttpEntity<AvatarDto> avatarRequest = new HttpEntity<>(avatarDto, headers);
         //act
         exception = assertThrows(HttpClientErrorException.Forbidden.class,
-                () -> restTemplate.postForEntity(elementUrl, elementRequest, ElementDto.class)
+                () -> restTemplate.postForEntity(avatarUrl, elementRequest, ElementDto.class)
         );
 
         assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode(), "Expected a FORBIDDEN status for unauthorized access");
@@ -119,18 +117,22 @@ class AdminControllerTest {
         HttpEntity<ElementDto> elementUpdateRequest = new HttpEntity<>(elementUpdateDto, headers);
         //act
         exception = assertThrows(HttpClientErrorException.Forbidden.class,
-                () -> restTemplate.postForEntity(elementUrl, elementRequest, ElementDto.class)
+                () -> restTemplate.exchange(
+                        elementUpdateUrl, HttpMethod.PUT, elementUpdateRequest, ElementDto.class)
         );
 
         assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode(), "Expected a FORBIDDEN status for unauthorized access");
     }
-    @Order(2)
+    @Order(3)
     @Test
     @DisplayName("Only Admin Should be able to create an element")
     void adminShouldCreateElement() {
+        headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + adminToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
         //arrange
         String elementUrl = "http://localhost:" + serverPort + "/api/v1/admin/element";
-        headers.add("Authorization", "Bearer " + adminToken);
+
         ElementDto elementDto = new ElementDto();
         elementDto.setImageUrl("https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE");
         elementDto.setWidth(1);
@@ -167,13 +169,15 @@ class AdminControllerTest {
         assertEquals(HttpStatus.CREATED, avatarResponse.getStatusCode(), "Expected a CREATED status for valid token");
         assertNotNull(avatarResponse.getBody(), "avatar returned null");
     }
-    @Order(3)
+    @Order(2)
     @Test
     @DisplayName("Only Admin Should be able to update the image url for an element")
     void adminShouldUpdateElement() {
+        headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + adminToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
         //arrange
         String elementUrl = "http://localhost:" + serverPort + "/api/v1/admin/element";
-        headers.add("Authorization", "Bearer " + adminToken);
         ElementDto elementDto = new ElementDto();
         elementDto.setImageUrl("https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE");
         elementDto.setWidth(1);
