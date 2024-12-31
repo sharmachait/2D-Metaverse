@@ -28,7 +28,9 @@ public class JwtProvider {
                 .claim("id", Id)
                 .signWith(key)
                 .compact();
-
+        Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(jwt).getBody();
+        String email = String.valueOf(claims.get("email"));
+        String id = String.valueOf(claims.get("id"));
         return jwt;
     }
 
@@ -60,8 +62,11 @@ public class JwtProvider {
         try {
             SecretKey key = Keys.hmacShaKeyFor(JwtConstants.JWT_SECRET.getBytes());
             Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(jwt).getBody();
+            String email = String.valueOf(claims.get("email"));
+            String id = String.valueOf(claims.get("id"));
             return String.valueOf(claims.get("id"));
         } catch (Exception e) {
+            String message = e.getMessage();
             return null;
         }
     }

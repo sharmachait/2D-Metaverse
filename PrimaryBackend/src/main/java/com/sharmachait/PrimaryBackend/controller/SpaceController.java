@@ -1,10 +1,10 @@
 package com.sharmachait.PrimaryBackend.controller;
 
 import com.sharmachait.PrimaryBackend.config.jwt.JwtProvider;
+import com.sharmachait.PrimaryBackend.models.dto.GameMapDto;
 import com.sharmachait.PrimaryBackend.models.dto.SpaceDto;
 import com.sharmachait.PrimaryBackend.models.dto.SpaceElementDto;
-import com.sharmachait.PrimaryBackend.models.entity.GameMap;
-import com.sharmachait.PrimaryBackend.models.entity.User;
+import com.sharmachait.PrimaryBackend.models.dto.UserDto;
 import com.sharmachait.PrimaryBackend.service.gameMap.GameMapService;
 import com.sharmachait.PrimaryBackend.service.space.SpaceService;
 import com.sharmachait.PrimaryBackend.service.user.UserService;
@@ -24,12 +24,13 @@ public class SpaceController {
     private final SpaceService spaceService;
     private final UserService userService;
     private final GameMapService gameMapService;
+
     @PostMapping
     public ResponseEntity<?> postSpace(@RequestBody @Valid SpaceDto spaceDto, @RequestHeader("Authorization") String authHeader) {
         try{
             String userId = JwtProvider.getIdFromToken(authHeader);
-            User owner = userService.findById(userId);
-            GameMap gameMap;
+            UserDto owner = userService.findById(userId);
+            GameMapDto gameMap;
             if(spaceDto.getMapId() == null) {
                 gameMap = null;
             }else{

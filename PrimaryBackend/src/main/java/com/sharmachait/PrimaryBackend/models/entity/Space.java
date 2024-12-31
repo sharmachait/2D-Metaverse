@@ -34,6 +34,8 @@ public class Space {
     @JsonBackReference
     private GameMap gameMap;
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "owner_id", referencedColumnName = "id", nullable = false)
+    @JsonBackReference
     private User owner;
 }

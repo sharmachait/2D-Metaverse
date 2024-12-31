@@ -1,5 +1,6 @@
 package com.sharmachait.PrimaryBackend.service.gameMap;
 
+import com.sharmachait.PrimaryBackend.models.dto.ElementDto;
 import com.sharmachait.PrimaryBackend.models.dto.GameMapDto;
 import com.sharmachait.PrimaryBackend.models.dto.MapElementDto;
 import com.sharmachait.PrimaryBackend.models.entity.Element;
@@ -12,9 +13,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -22,95 +21,90 @@ public class GameMapServiceImpl implements GameMapService {
     private final GameMapRepository gameMapRepository;
     private final ElementService elementService;
     private final MapElementRepository mapElementRepository;
-    @Override
-    public GameMap findById(String id) {
-        System.out.println("Received ID: " + id);
-        System.out.println("ID class type: " + (id != null ? id.getClass().getName() : "null"));
-        try {
-            Optional<GameMap> mapOptional = gameMapRepository.findById(id);
-            System.out.println("Found map: " + mapOptional.isPresent());
-            GameMap map = mapOptional.orElse(null);
-            return map;
-        } catch(Exception e) {
-            System.out.println("Exception type: " + e.getClass().getName());
-            System.out.println("Exception message: " + e.getMessage());
-            e.printStackTrace();
-            return null;
-        }
-    }
 
     @Override
-    public GameMap save(GameMap gameMap) {
-        return gameMapRepository.save(gameMap);
+    public GameMapDto findById(String id) throws Exception {
+        GameMap gameMap = gameMapRepository.findById(id).orElseThrow(()-> new Exception("Game map not found"));
+        return gameMapToGameMapDto(gameMap);
     }
 
     @Override
     @Transactional
-    public GameMap save(GameMapDto gameMapDto) throws Exception {
-        return mapDtoToGameMap(gameMapDto);
-    }
-    @Transactional
-    protected GameMap mapDtoToGameMap(GameMapDto gameMapDto) throws Exception {
-        if (!gameMapDto.getDimensions().matches("^[0-9]{1,3}x[0-9]{1,3}$")) {
-            throw new IllegalArgumentException("Invalid dimensions format: " + gameMapDto.getDimensions());
+    public GameMapDto save(GameMapDto gameMapDto) throws Exception {
+        for(MapElementDto mapElementDto : gameMapDto.getMapElements()) {
+            MapElement mapElement = mapElementDtoToMapElement(mapElementDto);
+            mapElement = mapElementRepository.save(mapElement);
+            mapElementDto.setId(mapElement.getId());
         }
-
-        GameMap gameMap = new GameMap();
-        int iX = gameMapDto.getDimensions().indexOf('x');
-        String height = gameMapDto.getDimensions().substring(0, iX);
-        String width = gameMapDto.getDimensions().substring(iX + 1);
-//        gameMap.setMapElements(elements);
-        gameMap.setName(gameMapDto.getName());
-        gameMap.setHeight(Integer.parseInt(height));
-        gameMap.setWidth(Integer.parseInt(width));
-        gameMap.setThumbnail(gameMapDto.getThumbnail());
+        GameMap gameMap = gameMapDtoToGameMap(gameMapDto);
         gameMap = gameMapRepository.save(gameMap);
-        if(gameMapDto.getMapElements()!=null) {
-            for(MapElementDto mapElementDto : gameMapDto.getMapElements()) {
-                mapElementDtoToMapElement(gameMap, mapElementDto);
-            }
-        }
-        return gameMap;
-
-    }
-    @Transactional
-    protected void mapElementDtoToMapElement(GameMap gameMap, MapElementDto mapElementDto) throws Exception {
-        Element element = elementService.getElementById(mapElementDto.getElementId());
-        MapElement mapElement =  MapElement.builder()
-                .element(element)
-                .gameMap(gameMap)
-                .y(mapElementDto.getY())
-                .x(mapElementDto.getX())
-                .build();
-        mapElementRepository.save(mapElement);
+        return gameMapToGameMapDto(gameMap);
     }
 
-    private GameMapDto mapGameMapToDto(GameMap gameMap) throws Exception {
-        List<MapElementDto> elements = new ArrayList<>();
+    private GameMapDto gameMapToGameMapDto(GameMap gameMap) {
         GameMapDto gameMapDto = new GameMapDto();
-        if(gameMap.getMapElements()!=null) {
-            for(MapElement mapElement : gameMap.getMapElements()) {
-                elements.add(mapElementToMapElementDto(mapElement));
-            }
-        }
-
-
-        gameMapDto.setMapElements(elements);
-        gameMapDto.setName(gameMap.getName());
-        gameMapDto.setDimensions(gameMap.getHeight() + "x" + gameMap.getWidth());
-        gameMapDto.setThumbnail(gameMap.getThumbnail());
         gameMapDto.setId(gameMap.getId());
+        gameMapDto.setName(gameMap.getName());
+        gameMapDto.setThumbnail(gameMap.getThumbnail());
+        gameMapDto.setDimensions(gameMap.getWidth()+"x"+gameMap.getHeight());
+        List<MapElementDto> elements = new ArrayList<>();
+        for(MapElement mapElement : gameMap.getMapElements()) {
+            elements.add(mapElementToMapElementDto(mapElement));
+        }
+        gameMapDto.setMapElements(elements);
         return gameMapDto;
     }
 
-    private MapElementDto mapElementToMapElementDto(MapElement mapElement) throws Exception {
+    private GameMap gameMapDtoToGameMap(GameMapDto gameMapDto) throws Exception {
+        GameMap gameMap = new GameMap();
+        gameMap.setId(gameMapDto.getId());
+        gameMap.setName(gameMapDto.getName());
+        gameMap.setThumbnail(gameMapDto.getThumbnail());
+        int iX = gameMapDto.getDimensions().indexOf("x");
+        int width = Integer.parseInt(gameMapDto.getDimensions().substring(0,iX));
+        int height = Integer.parseInt(gameMapDto.getDimensions().substring(iX+1));
+        gameMap.setWidth(width);
+        gameMap.setHeight(height);
+        Set<MapElement> elements = new HashSet<>();
+        for(MapElementDto mapElementDto : gameMapDto.getMapElements()) {
+            MapElement mapElement = mapElementDtoToMapElement(mapElementDto);
+            elements.add(mapElement);
+        }
+        gameMap.setMapElements(elements);
+        return gameMap;
+    }
 
-        return MapElementDto.builder()
-                .id(mapElement.getId())
-                .elementId(mapElement.getElement().getId())
-                .gameMapId(mapElement.getGameMap().getId())
-                .y(mapElement.getY())
-                .x(mapElement.getX())
+    private MapElement mapElementDtoToMapElement(MapElementDto mapElementDto) throws Exception {
+        MapElement mapElement = new MapElement();
+        mapElement.setId(mapElementDto.getId());
+        mapElement.setY(mapElementDto.getY());
+        mapElement.setX(mapElementDto.getX());
+        if(mapElementDto.getGameMapId() != null) {
+            GameMap gameMap = gameMapRepository.findById(mapElementDto.getGameMapId()).orElseThrow(()-> new Exception("Game map not found"));
+            mapElement.setGameMap(gameMap);
+        }
+        if(mapElementDto.getElementId() != null) {
+            ElementDto element = elementService.getElementById(mapElementDto.getElementId());
+            mapElement.setElement(mapDtoToElement(element));
+        }
+        return mapElement;
+    }
+    public Element mapDtoToElement(ElementDto elementDto) {
+        return Element.builder()
+                .id(elementDto.getId())
+                .isStatic(elementDto.getIsStatic())
+                .width(elementDto.getWidth())
+                .height(elementDto.getHeight())
+                .imageUrl(elementDto.getImageUrl())
                 .build();
+    }
+    private MapElementDto mapElementToMapElementDto(MapElement mapElement) {
+        MapElementDto mapElementDto = new MapElementDto();
+        mapElementDto.setId(mapElement.getId());
+        mapElementDto.setGameMapId(mapElement.getGameMap().getId());
+        mapElementDto.setY(mapElement.getY());
+        mapElementDto.setX(mapElement.getX());
+        mapElementDto.setElementId(mapElement.getElement().getId());
+        return mapElementDto;
     }
 }

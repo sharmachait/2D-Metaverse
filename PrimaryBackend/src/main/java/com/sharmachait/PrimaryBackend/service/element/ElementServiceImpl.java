@@ -14,11 +14,11 @@ import java.util.stream.Collectors;
 public class ElementServiceImpl implements ElementService {
     private final ElementRepository elementRepository;
     @Override
-    public Element getElementById(String id) throws Exception {
+    public ElementDto getElementById(String id) throws Exception {
         Element element = elementRepository
                 .findById(id)
                 .orElseThrow(()->new Exception("Element not found"));
-        return element;
+        return mapElementToDto(element);
     }
 
     @Override
@@ -33,7 +33,7 @@ public class ElementServiceImpl implements ElementService {
 
     @Override
     public ElementDto update(String elementId, ElementDto elementDto) throws Exception {
-        Element element = getElementById(elementId);
+        ElementDto element = getElementById(elementId);
 //        element.setStatic(elementDto.getIsStatic());
         element.setImageUrl(elementDto.getImageUrl());
         return save(element);

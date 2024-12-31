@@ -96,7 +96,7 @@ class SpaceControllerTest {
         MapElementDto mapElement4 = MapElementDto.builder()
                 .elementId(element2Id)
                 .x(19)
-                .y(20)
+                .y(21)
                 .build();
         List<MapElementDto> l = List.of(mapElement1, mapElement2, mapElement3, mapElement4);
         mapDto.setMapElements(l);
@@ -111,7 +111,7 @@ class SpaceControllerTest {
     void userIsAbleToCreateSpace() {
         //arrange
         String url = "http://localhost:" + serverPort + "/api/v1/space";
-
+        headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("Authorization", "Bearer " + userToken);
 
@@ -362,42 +362,10 @@ class SpaceControllerTest {
     void getMap() {
 
         headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + adminToken);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        //arrange
-        String elementUrl = "http://localhost:" + serverPort + "/api/v1/admin/element";
-
-        ElementDto elementDto = new ElementDto();
-        elementDto.setImageUrl("https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE");
-        elementDto.setWidth(1);
-        elementDto.setHeight(1);
-        elementDto.setIsStatic(true);
-        HttpEntity<ElementDto> elementRequest = new HttpEntity<>(elementDto, headers);
-        //act
-        ResponseEntity<ElementDto> elementResponse = restTemplate.postForEntity(elementUrl, elementRequest, ElementDto.class);
-        //assert
-        assertEquals(HttpStatus.CREATED, elementResponse.getStatusCode(), "Expected a CREATED status for valid token");
-        assertNotNull(elementResponse.getBody(), "element returned null");
-
-        //arrange
-        String mapUrl = "http://localhost:" + serverPort + "/api/v1/admin/map";
-        GameMapDto mapDto = new GameMapDto();
-        mapDto.setThumbnail("https://thumbnail.com/a.png");
-        mapDto.setDimensions("100x200");
-        HttpEntity<GameMapDto> mapRequest = new HttpEntity<>(mapDto, headers);
-        //act
-        ResponseEntity<GameMapDto> mapResponse = restTemplate.postForEntity(mapUrl, mapRequest, GameMapDto.class);
-        //assert
-        assertEquals(HttpStatus.CREATED, mapResponse.getStatusCode(), "Expected a CREATED status for valid token");
-        assertNotNull(mapResponse.getBody(), "map returned null");
-        mapId = mapResponse.getBody().getId();
-
-
-        headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + userToken);
         headers.setContentType(MediaType.APPLICATION_JSON);
         //arrange
-        mapUrl = "http://localhost:" + serverPort + "/api/v1/admin/map/"+mapId;
+        String mapUrl = "http://localhost:" + serverPort + "/api/v1/admin/map/"+mapId;
 
         HttpEntity<String> mapRequestGet = new HttpEntity<>(headers);
 

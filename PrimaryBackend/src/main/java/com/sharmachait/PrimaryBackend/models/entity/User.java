@@ -1,8 +1,11 @@
 package com.sharmachait.PrimaryBackend.models.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.Set;
 
 @Builder
 @Entity
@@ -26,7 +29,7 @@ public class User {
 
     private Role role;
 
-    @OneToOne(mappedBy = "owner")
-    @JsonBackReference
-    private Space adminSpace;
+    @OneToMany(mappedBy = "owner", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private Set<Space> ownedSpaces;
 }

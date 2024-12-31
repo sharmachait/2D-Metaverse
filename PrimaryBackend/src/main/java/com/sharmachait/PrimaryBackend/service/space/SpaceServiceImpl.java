@@ -1,5 +1,6 @@
 package com.sharmachait.PrimaryBackend.service.space;
 import com.sharmachait.PrimaryBackend.config.jwt.JwtProvider;
+import com.sharmachait.PrimaryBackend.models.dto.GameMapDto;
 import com.sharmachait.PrimaryBackend.models.dto.SpaceDto;
 import com.sharmachait.PrimaryBackend.models.dto.SpaceElementDto;
 import com.sharmachait.PrimaryBackend.models.entity.*;
@@ -39,10 +40,11 @@ public class SpaceServiceImpl implements SpaceService {
 
     @Transactional
     @Override
-    public SpaceDto save(User owner, GameMap gameMap, SpaceDto spaceDto) {
+    public SpaceDto save(User owner, GameMapDto gameMapDto, SpaceDto spaceDto) {
         int xIndex = spaceDto.getDimensions().indexOf('x');
         String height = spaceDto.getDimensions().substring(0,xIndex);
         String width = spaceDto.getDimensions().substring(xIndex+1);
+
 
 
         Set<SpaceElement> spaceElements = new HashSet<>();
@@ -96,8 +98,8 @@ public class SpaceServiceImpl implements SpaceService {
     }
 
     @Override
-    public Space save(Space space) {
-        return spaceRepository.save(space);
+    public SpaceDto save(Space space) {
+        return mapSpaceToSpaceDto(spaceRepository.save(space));
     }
 
     @Override

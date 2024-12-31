@@ -2,6 +2,7 @@ package com.sharmachait.PrimaryBackend.controller;
 
 import com.sharmachait.PrimaryBackend.config.jwt.JwtProvider;
 import com.sharmachait.PrimaryBackend.models.dto.LoginDto;
+import com.sharmachait.PrimaryBackend.models.dto.UserDto;
 import com.sharmachait.PrimaryBackend.models.entity.Role;
 import com.sharmachait.PrimaryBackend.models.entity.User;
 import com.sharmachait.PrimaryBackend.models.response.AuthResponse;
@@ -45,17 +46,18 @@ public class AuthController {
                     .body(errorResponse);
         }
         try {
+            if(user.getUsername().isBlank()) {
+                AuthResponse errorResponse = new AuthResponse();
+                errorResponse.setMessage("Illegal username");
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body(errorResponse);
+            }
             userService.findByUsername(user.getUsername());
             AuthResponse errorResponse = new AuthResponse();
             errorResponse.setMessage("Username already exists");
             return ResponseEntity
                     .status(HttpStatus.CONFLICT)
-                    .body(errorResponse);
-        } catch (IllegalArgumentException e) {
-            AuthResponse errorResponse = new AuthResponse();
-            errorResponse.setMessage(e.getMessage());
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
                     .body(errorResponse);
         }
         catch (NoSuchElementException e) {
@@ -71,9 +73,10 @@ public class AuthController {
             Authentication auth = new UsernamePasswordAuthenticationToken(user.getUsername(), null, authorities);
 
             String jwt;
+            String userId;
             try{
-                newUser = userService.save(newUser);
-                jwt = JwtProvider.generateToken(auth, newUser.getId());
+                userId = userService.save(newUser).getId();
+                jwt = JwtProvider.generateToken(auth, userId);
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -84,7 +87,7 @@ public class AuthController {
             authResponse.setJwt(jwt);
             authResponse.setStatus(true);
             authResponse.setMessage("User registered successfully");
-            authResponse.setUserId(newUser.getId());
+            authResponse.setUserId(userId);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(authResponse);
@@ -94,7 +97,7 @@ public class AuthController {
     @PostMapping("/signin")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginDto user) throws Exception {
         try{
-            User savedUser = userService.findByUsername(user.getUsername());
+            UserDto savedUser = userService.findByUsername(user.getUsername());
             Authentication auth;
             try{
                 auth = authManager.authenticate(
