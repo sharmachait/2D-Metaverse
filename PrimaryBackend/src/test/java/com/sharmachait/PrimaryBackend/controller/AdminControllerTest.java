@@ -6,10 +6,13 @@ import com.sharmachait.PrimaryBackend.models.response.AuthResponse;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -59,7 +62,9 @@ class AdminControllerTest {
         userToken = authResponseUser.getJwt();
         userId = authResponseUser.getUserId();
 
+
     }
+    String mapId;
     @Order(1)
     @Test
     @DisplayName("User not able to access admin endpoints")
@@ -156,7 +161,7 @@ class AdminControllerTest {
         //assert
         assertEquals(HttpStatus.CREATED, mapResponse.getStatusCode(), "Expected a CREATED status for valid token");
         assertNotNull(mapResponse.getBody(), "map returned null");
-
+        mapId = mapResponse.getBody().getId();
         //arrange
         String avatarUrl = "http://localhost:" + serverPort + "/api/v1/admin/avatar";
         AvatarDto avatarDto = new AvatarDto();
@@ -198,5 +203,59 @@ class AdminControllerTest {
         assertEquals(HttpStatus.CREATED, elementUpdateResponse.getStatusCode(), "Expected an OK status for valid token");
         assertNotNull(elementUpdateResponse.getBody(), "Response body should not be null");
         assertEquals("updated", elementUpdateResponse.getBody().getImageUrl(), "Image URL should be updated");
+    }
+    @Order(4)
+    @Test
+    @DisplayName("User Should be able to get a map")
+    void getMap() {
+
+        headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + adminToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        //arrange
+        String elementUrl = "http://localhost:" + serverPort + "/api/v1/admin/element";
+
+        ElementDto elementDto = new ElementDto();
+        elementDto.setImageUrl("https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE");
+        elementDto.setWidth(1);
+        elementDto.setHeight(1);
+        elementDto.setIsStatic(true);
+        HttpEntity<ElementDto> elementRequest = new HttpEntity<>(elementDto, headers);
+        //act
+        ResponseEntity<ElementDto> elementResponse = restTemplate.postForEntity(elementUrl, elementRequest, ElementDto.class);
+        //assert
+        assertEquals(HttpStatus.CREATED, elementResponse.getStatusCode(), "Expected a CREATED status for valid token");
+        assertNotNull(elementResponse.getBody(), "element returned null");
+
+        //arrange
+        String mapUrl = "http://localhost:" + serverPort + "/api/v1/admin/map";
+        GameMapDto mapDto = new GameMapDto();
+        mapDto.setThumbnail("https://thumbnail.com/a.png");
+        mapDto.setDimensions("100x200");
+        HttpEntity<GameMapDto> mapRequest = new HttpEntity<>(mapDto, headers);
+        //act
+        ResponseEntity<GameMapDto> mapResponse = restTemplate.postForEntity(mapUrl, mapRequest, GameMapDto.class);
+        //assert
+        assertEquals(HttpStatus.CREATED, mapResponse.getStatusCode(), "Expected a CREATED status for valid token");
+        assertNotNull(mapResponse.getBody(), "map returned null");
+        mapId = mapResponse.getBody().getId();
+
+
+        headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + userToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        //arrange
+        mapUrl = "http://localhost:" + serverPort + "/api/v1/admin/map/"+mapId;
+
+        HttpEntity<String> mapRequestGet = new HttpEntity<>(headers);
+
+        //act
+        ResponseEntity<GameMapDto> mapResponseGet = restTemplate.exchange(
+                mapUrl,HttpMethod.GET, mapRequestGet, GameMapDto.class);
+
+        //assert
+        assertEquals(HttpStatus.OK, mapResponseGet.getStatusCode(), "Expected a CREATED status for valid token");
+        assertNotNull(mapResponseGet.getBody(), "map returned null");
+        assertEquals(mapId, mapResponseGet.getBody().getId());
     }
 }

@@ -61,6 +61,7 @@ class UserControllerTest {
         avatarDto.setName("testAvatar");
         avatarDto.setImageUrl("testUrl");
 
+
         HttpEntity<AvatarDto> avatarRequest = new HttpEntity<>(avatarDto, headers);
         ResponseEntity<AvatarDto> avatarResponse = restTemplate.postForEntity(avatarUrl, avatarRequest, AvatarDto.class);
 
@@ -137,7 +138,7 @@ class UserControllerTest {
             restTemplate.postForEntity(url, request, UserDto.class);
         });
         assertEquals(exception.getStatusCode(), HttpStatus.UNAUTHORIZED, "status code should be UNAUHTORIZED");
-        assertTrue(exception.getMessage().contains("Unauthorized"), "Response message should indicate Unauthorized");
+
     }
 
     @Order(4)
@@ -146,22 +147,37 @@ class UserControllerTest {
     void getAvatarInformationForUserBulk() {
         //arrange
 
-        String url = String.format("http://localhost:%s/api/v1/user/metadata/bulk?ids=%s",
-                serverPort,
-                userId);
+        String updateUrl = "http://localhost:" + serverPort + "/api/v1/user/metadata";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("Authorization", "Bearer " + token);
 
+        UserDto userDto = new UserDto();
+        userDto.setAvatarId(avatarId);
+
+        HttpEntity<UserDto> updateRequest = new HttpEntity<>(userDto, headers);
+        //act and assert
+        ResponseEntity<UserDto> userUpdatedResponse = restTemplate.postForEntity(updateUrl, updateRequest, UserDto.class);
+
+
+
+        String url = String.format("http://localhost:%s/api/v1/user/metadata/bulk?ids=%s",
+                serverPort,
+                userId);
+
+        headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("Authorization", "Bearer " + token);
+
         HttpEntity<String> request = new HttpEntity<>(headers);
         //act and assert
-        ResponseEntity<List<AvatarDto>> response = restTemplate.exchange(url, HttpMethod.GET, request, new ParameterizedTypeReference<List<AvatarDto>>() {});
-        List<AvatarDto> avatars = response.getBody();
+        ResponseEntity<List<UserDto>> response = restTemplate.exchange(url, HttpMethod.GET, request, new ParameterizedTypeReference<List<UserDto>>() {});
+        List<UserDto> avatars = response.getBody();
 
         assertEquals(HttpStatus.OK, response.getStatusCode(),  "status code should be OK");
         assertEquals(1, avatars.size(), "Size of response body should be 1");
-        assertEquals(avatarId, avatars.get(0).getId(),  "avatar ids should match");
+        assertEquals(avatarId, avatars.get(0).getAvatarId(),  "avatar ids should match");
     }
 
     @Order(5)

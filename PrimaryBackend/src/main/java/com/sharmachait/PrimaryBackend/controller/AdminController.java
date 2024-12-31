@@ -67,4 +67,15 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+
+    @GetMapping("/map/{mapid}")
+    public ResponseEntity<?> postMap(@PathVariable String mapid){
+        try {
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(gameMapService.findById(mapid));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
 }

@@ -39,30 +39,19 @@ public class SpaceServiceImpl implements SpaceService {
 
     @Transactional
     @Override
-    public SpaceDto save(String authHeader, SpaceDto spaceDto) {
+    public SpaceDto save(User owner, GameMap gameMap, SpaceDto spaceDto) {
         int xIndex = spaceDto.getDimensions().indexOf('x');
         String height = spaceDto.getDimensions().substring(0,xIndex);
         String width = spaceDto.getDimensions().substring(xIndex+1);
-        GameMap gameMap;
-        if(spaceDto.getMapId() == null) {
-            gameMap = null;
-        }else{
-            gameMap = gameMapService.findById(spaceDto.getMapId());
 
-            if(gameMap == null) {
-                throw new NoSuchElementException();
-            }
-        }
 
         Set<SpaceElement> spaceElements = new HashSet<>();
-        String userId = JwtProvider.getIdFromToken(authHeader);
-        User owner = userService.findById(userId);
+
 
         Space spaceEntity = Space.builder()
                 .name(spaceDto.getName())
                 .height(Integer.parseInt(height))
                 .width(Integer.parseInt(width))
-//                .thumbnail(spaceDto.getThumbnail())
                 .owner(owner)
                 .build();
 

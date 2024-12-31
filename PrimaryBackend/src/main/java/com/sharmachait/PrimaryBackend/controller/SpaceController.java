@@ -1,8 +1,13 @@
 package com.sharmachait.PrimaryBackend.controller;
 
+import com.sharmachait.PrimaryBackend.config.jwt.JwtProvider;
 import com.sharmachait.PrimaryBackend.models.dto.SpaceDto;
 import com.sharmachait.PrimaryBackend.models.dto.SpaceElementDto;
+import com.sharmachait.PrimaryBackend.models.entity.GameMap;
+import com.sharmachait.PrimaryBackend.models.entity.User;
+import com.sharmachait.PrimaryBackend.service.gameMap.GameMapService;
 import com.sharmachait.PrimaryBackend.service.space.SpaceService;
+import com.sharmachait.PrimaryBackend.service.user.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -10,17 +15,31 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/space")
 public class SpaceController {
     private final SpaceService spaceService;
-
+    private final UserService userService;
+    private final GameMapService gameMapService;
     @PostMapping
     public ResponseEntity<?> postSpace(@RequestBody @Valid SpaceDto spaceDto, @RequestHeader("Authorization") String authHeader) {
         try{
-            SpaceDto space = spaceService.save(authHeader, spaceDto);
+            String userId = JwtProvider.getIdFromToken(authHeader);
+            User owner = userService.findById(userId);
+            GameMap gameMap;
+            if(spaceDto.getMapId() == null) {
+                gameMap = null;
+            }else{
+                gameMap = gameMapService.findById(spaceDto.getMapId());
+
+                if(gameMap == null) {
+                    throw new NoSuchElementException();
+                }
+            }
+            SpaceDto space = spaceService.save(owner, gameMap, spaceDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(space);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

@@ -48,6 +48,9 @@ public class UserController {
         Avatar avatar;
         String userId = JwtProvider.getIdFromToken(authorizationHeader);
         avatar = avatarRepository.findById(userDto.getAvatarId()).orElse(null);
+        if(avatar == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         User user = userService.findById(userId);
         user.setAvatar(avatar);
 //      user.setRole(userDto.getRole());
