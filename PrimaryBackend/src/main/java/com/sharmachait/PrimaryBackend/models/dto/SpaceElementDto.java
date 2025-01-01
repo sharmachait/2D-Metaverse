@@ -10,7 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class SpaceElementDto {
+    private String id;
     private String elementId;
+    private String spaceId;
     private boolean isStatic;
     private int x;
     private int y;

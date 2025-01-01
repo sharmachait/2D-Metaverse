@@ -22,14 +22,14 @@ public class User {
 
     private String password;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "avatar_id", referencedColumnName = "id")
     @JsonBackReference
     private Avatar avatar;
 
     private Role role;
 
-    @OneToMany(mappedBy = "owner", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonManagedReference
     private Set<Space> ownedSpaces;
 }

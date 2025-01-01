@@ -33,8 +33,13 @@ public class UserController {
     public ResponseEntity<UserDto> postMetadata(
             @RequestHeader("Authorization") String authorizationHeader,
             @RequestBody UserDto userDto) throws Exception {
-        String userId = JwtProvider.getIdFromToken(authorizationHeader);
-        return ResponseEntity.ok(userService.update(userDto, userId));
+        try{
+            String userId = JwtProvider.getIdFromToken(authorizationHeader);
+            return ResponseEntity.ok(userService.update(userDto, userId));
+        }
+        catch (Exception e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
 
     }
     @GetMapping("/metadata/bulk")

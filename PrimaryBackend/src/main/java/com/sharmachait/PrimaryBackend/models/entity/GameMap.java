@@ -20,8 +20,9 @@ public class GameMap {
     private String name;
     @OneToMany(
             mappedBy = "gameMap",
-            fetch = FetchType.EAGER,
+            fetch = FetchType.LAZY,
             cascade = CascadeType.ALL
+
     )
     @JsonManagedReference
     private Set<MapElement> mapElements;
@@ -29,7 +30,7 @@ public class GameMap {
     private String thumbnail;
     @OneToMany(
             mappedBy = "gameMap",
-            fetch = FetchType.EAGER,
+            fetch = FetchType.LAZY,
             cascade = CascadeType.ALL
     )
     @JsonManagedReference

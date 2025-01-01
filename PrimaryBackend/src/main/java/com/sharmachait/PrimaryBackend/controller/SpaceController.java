@@ -5,6 +5,7 @@ import com.sharmachait.PrimaryBackend.models.dto.GameMapDto;
 import com.sharmachait.PrimaryBackend.models.dto.SpaceDto;
 import com.sharmachait.PrimaryBackend.models.dto.SpaceElementDto;
 import com.sharmachait.PrimaryBackend.models.dto.UserDto;
+import com.sharmachait.PrimaryBackend.models.entity.User;
 import com.sharmachait.PrimaryBackend.service.gameMap.GameMapService;
 import com.sharmachait.PrimaryBackend.service.space.SpaceService;
 import com.sharmachait.PrimaryBackend.service.user.UserService;
@@ -22,25 +23,14 @@ import java.util.NoSuchElementException;
 @RequestMapping("/api/v1/space")
 public class SpaceController {
     private final SpaceService spaceService;
-    private final UserService userService;
-    private final GameMapService gameMapService;
 
     @PostMapping
     public ResponseEntity<?> postSpace(@RequestBody @Valid SpaceDto spaceDto, @RequestHeader("Authorization") String authHeader) {
         try{
             String userId = JwtProvider.getIdFromToken(authHeader);
-            UserDto owner = userService.findById(userId);
-            GameMapDto gameMap;
-            if(spaceDto.getMapId() == null) {
-                gameMap = null;
-            }else{
-                gameMap = gameMapService.findById(spaceDto.getMapId());
+            String gameMapId = spaceDto.getMapId();
 
-                if(gameMap == null) {
-                    throw new NoSuchElementException();
-                }
-            }
-            SpaceDto space = spaceService.save(owner, gameMap, spaceDto);
+            SpaceDto space = spaceService.save(userId, gameMapId, spaceDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(space);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

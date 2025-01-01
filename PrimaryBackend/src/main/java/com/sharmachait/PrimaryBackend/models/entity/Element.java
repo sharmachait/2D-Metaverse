@@ -21,7 +21,7 @@ public class Element {
     private boolean isStatic;
     @OneToMany(
             mappedBy = "element",
-            fetch = FetchType.EAGER,
+            fetch = FetchType.LAZY,
             cascade = CascadeType.ALL
     )
     @JsonManagedReference
@@ -29,7 +29,7 @@ public class Element {
 
     @OneToMany(
             mappedBy = "element",
-            fetch = FetchType.EAGER,
+            fetch = FetchType.LAZY,
             cascade = CascadeType.ALL
     )
     @JsonManagedReference

@@ -31,14 +31,57 @@ public class GameMapServiceImpl implements GameMapService {
     @Override
     @Transactional
     public GameMapDto save(GameMapDto gameMapDto) throws Exception {
-        for(MapElementDto mapElementDto : gameMapDto.getMapElements()) {
-            MapElement mapElement = mapElementDtoToMapElement(mapElementDto);
-            mapElement = mapElementRepository.save(mapElement);
-            mapElementDto.setId(mapElement.getId());
-        }
-        GameMap gameMap = gameMapDtoToGameMap(gameMapDto);
+
+        GameMap gameMap = new GameMap();
+        gameMap.setId(gameMapDto.getId());
+        gameMap.setName(gameMapDto.getName());
+        gameMap.setThumbnail(gameMapDto.getThumbnail());
+        int iX = gameMapDto.getDimensions().indexOf("x");
+        int height = Integer.parseInt(gameMapDto.getDimensions().substring(0,iX));
+        int width = Integer.parseInt(gameMapDto.getDimensions().substring(iX+1));
+        gameMap.setWidth(width);
+        gameMap.setHeight(height);
         gameMap = gameMapRepository.save(gameMap);
-        return gameMapToGameMapDto(gameMap);
+
+
+
+        Set<MapElement> mapElements = new HashSet<>();
+        if(gameMapDto.getMapElements()!=null){
+            for(MapElementDto mapElementDto : gameMapDto.getMapElements()) {
+                MapElement mapElement = mapElementDtoToMapElement(mapElementDto);
+                mapElement.setGameMap(gameMap);
+                mapElement = mapElementRepository.save(mapElement);
+
+                mapElements.add(mapElement);
+            }
+        }
+        gameMapDto = gameMapToGameMapDto(gameMap, mapElements);
+        return gameMapDto;
+    }
+
+    private GameMapDto gameMapToGameMapDto(GameMap gameMap, Set<MapElement> mapElements) {
+        GameMapDto gameMapDto = new GameMapDto();
+        gameMapDto.setId(gameMap.getId());
+        gameMapDto.setName(gameMap.getName());
+        gameMapDto.setThumbnail(gameMap.getThumbnail());
+        gameMapDto.setDimensions(gameMap.getHeight()+"x"+gameMap.getWidth());
+        List<MapElementDto> elements = new ArrayList<>();
+
+        for(MapElement mapElement : mapElements) {
+
+            MapElementDto mapElementDto = new MapElementDto();
+            mapElementDto.setId(mapElement.getId());
+            mapElementDto.setGameMapId(gameMap.getId());
+            mapElementDto.setY(mapElement.getY());
+            mapElementDto.setX(mapElement.getX());
+            if(mapElement.getElement()!=null)
+                mapElementDto.setElementId(mapElement.getElement().getId());
+
+            elements.add(mapElementDto);
+        }
+
+        gameMapDto.setMapElements(elements);
+        return gameMapDto;
     }
 
     private GameMapDto gameMapToGameMapDto(GameMap gameMap) {
@@ -46,33 +89,26 @@ public class GameMapServiceImpl implements GameMapService {
         gameMapDto.setId(gameMap.getId());
         gameMapDto.setName(gameMap.getName());
         gameMapDto.setThumbnail(gameMap.getThumbnail());
-        gameMapDto.setDimensions(gameMap.getWidth()+"x"+gameMap.getHeight());
+        gameMapDto.setDimensions(gameMap.getHeight()+"x"+gameMap.getWidth());
         List<MapElementDto> elements = new ArrayList<>();
+
         for(MapElement mapElement : gameMap.getMapElements()) {
-            elements.add(mapElementToMapElementDto(mapElement));
+
+            MapElementDto mapElementDto = new MapElementDto();
+            mapElementDto.setId(mapElement.getId());
+            mapElementDto.setGameMapId(gameMap.getId());
+            mapElementDto.setY(mapElement.getY());
+            mapElementDto.setX(mapElement.getX());
+            if(mapElement.getElement()!=null)
+                mapElementDto.setElementId(mapElement.getElement().getId());
+
+            elements.add(mapElementDto);
         }
+
         gameMapDto.setMapElements(elements);
         return gameMapDto;
     }
 
-    private GameMap gameMapDtoToGameMap(GameMapDto gameMapDto) throws Exception {
-        GameMap gameMap = new GameMap();
-        gameMap.setId(gameMapDto.getId());
-        gameMap.setName(gameMapDto.getName());
-        gameMap.setThumbnail(gameMapDto.getThumbnail());
-        int iX = gameMapDto.getDimensions().indexOf("x");
-        int width = Integer.parseInt(gameMapDto.getDimensions().substring(0,iX));
-        int height = Integer.parseInt(gameMapDto.getDimensions().substring(iX+1));
-        gameMap.setWidth(width);
-        gameMap.setHeight(height);
-        Set<MapElement> elements = new HashSet<>();
-        for(MapElementDto mapElementDto : gameMapDto.getMapElements()) {
-            MapElement mapElement = mapElementDtoToMapElement(mapElementDto);
-            elements.add(mapElement);
-        }
-        gameMap.setMapElements(elements);
-        return gameMap;
-    }
 
     private MapElement mapElementDtoToMapElement(MapElementDto mapElementDto) throws Exception {
         MapElement mapElement = new MapElement();
@@ -101,10 +137,12 @@ public class GameMapServiceImpl implements GameMapService {
     private MapElementDto mapElementToMapElementDto(MapElement mapElement) {
         MapElementDto mapElementDto = new MapElementDto();
         mapElementDto.setId(mapElement.getId());
-        mapElementDto.setGameMapId(mapElement.getGameMap().getId());
+        if(mapElement.getGameMap()!=null)
+            mapElementDto.setGameMapId(mapElement.getGameMap().getId());
         mapElementDto.setY(mapElement.getY());
         mapElementDto.setX(mapElement.getX());
-        mapElementDto.setElementId(mapElement.getElement().getId());
+        if(mapElement.getElement()!=null)
+            mapElementDto.setElementId(mapElement.getElement().getId());
         return mapElementDto;
     }
 }

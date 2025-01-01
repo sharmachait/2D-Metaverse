@@ -9,6 +9,8 @@ import com.sharmachait.PrimaryBackend.models.entity.SpaceElement;
 import com.sharmachait.PrimaryBackend.models.entity.User;
 import com.sharmachait.PrimaryBackend.repository.AvatarRepository;
 import com.sharmachait.PrimaryBackend.repository.UserRepository;
+import com.sharmachait.PrimaryBackend.service.space.SpaceService;
+import com.sharmachait.PrimaryBackend.service.space.SpaceServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +23,8 @@ public class UserServiceImpl implements UserService {
     UserRepository userRepository;
     @Autowired
     AvatarRepository avatarRepository;
+    @Autowired
+    SpaceServiceImpl spaceService;
     @Override
     public UserDto findByUsername(String username) throws NoSuchElementException {
 
@@ -56,38 +60,19 @@ public class UserServiceImpl implements UserService {
 
     private UserDto userToUserDto(User user) {
         UserDto userDto = new UserDto();
-        userDto.setAvatarId(user.getAvatar().getId());
+        if(user.getAvatar()!=null) {
+            userDto.setAvatarId(user.getAvatar().getId());
+        }
         userDto.setRole(user.getRole());
         userDto.setUsername(user.getUsername());
         userDto.setId(user.getId());
         Set<SpaceDto> spaces = new HashSet<>();
-        for(Space space: user.getOwnedSpaces()){
-            spaces.add(mapSpaceToSpaceDto(space));
+        if(user.getOwnedSpaces()!=null) {
+            for(Space space: user.getOwnedSpaces()){
+                spaces.add(spaceService.mapSpaceToSpaceDto(space));
+            }
         }
         userDto.setSpaces(spaces);
         return userDto;
-    }
-
-    public SpaceDto mapSpaceToSpaceDto(Space spaceEntity) {
-        SpaceDto spaceDto = SpaceDto.builder()
-                .mapId(spaceEntity.getGameMap() == null ? null: spaceEntity.getGameMap().getId())
-                .name(spaceEntity.getName())
-                .dimensions(spaceEntity.getHeight()+"x"+spaceEntity.getWidth())
-                .thumbnail(spaceEntity.getThumbnail())
-                .ownerId(spaceEntity.getOwner().getId())
-                .id(spaceEntity.getId())
-                .build();
-        List<SpaceElementDto> spaceElementDtos = new ArrayList<>();
-        for(SpaceElement spaceElement : spaceEntity.getSpaceElements()){
-            SpaceElementDto spaceElementDto = SpaceElementDto.builder()
-                    .y(spaceElement.getY())
-                    .x(spaceElement.getX())
-                    .isStatic(spaceElement.getElement().isStatic())
-                    .elementId(spaceElement.getId())
-                    .build();
-            spaceElementDtos.add(spaceElementDto);
-        }
-        spaceDto.setElements(spaceElementDtos);
-        return spaceDto;
     }
 }

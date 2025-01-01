@@ -14,13 +14,13 @@ public class MapElement {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "map_id", referencedColumnName = "id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "map_id", referencedColumnName = "id")
     @JsonBackReference
     private GameMap gameMap;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "element_id", referencedColumnName = "id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "element_id", referencedColumnName = "id")
     @JsonBackReference
     private Element element;
 //    private boolean isStatic;

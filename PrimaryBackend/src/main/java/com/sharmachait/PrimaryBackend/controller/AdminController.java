@@ -60,9 +60,10 @@ public class AdminController {
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<?> postMap(@RequestBody GameMapDto gameMapDto){
         try {
+            gameMapDto = gameMapService.save(gameMapDto);
             return ResponseEntity
                     .status(HttpStatus.CREATED)
-                    .body(gameMapService.save(gameMapDto));
+                    .body(gameMapDto);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }

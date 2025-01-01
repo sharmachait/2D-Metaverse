@@ -16,6 +16,7 @@ public class SpaceElementServiceImpl implements SpaceElementService {
     }
     private SpaceElementDto mapSpaceElementToDto(SpaceElement spaceElement) {
         SpaceElementDto spaceElementDto = new SpaceElementDto();
+        spaceElementDto.setId(spaceElement.getId());
         spaceElementDto.setElementId(spaceElement.getElement().getId());
         spaceElementDto.setX(spaceElement.getX());
         spaceElementDto.setY(spaceElement.getY());
