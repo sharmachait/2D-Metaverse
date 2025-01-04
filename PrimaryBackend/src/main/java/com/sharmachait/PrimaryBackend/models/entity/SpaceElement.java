@@ -14,12 +14,12 @@ public class SpaceElement {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "space_id", referencedColumnName = "id")
     @JsonBackReference
     private Space space;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "element_id", referencedColumnName = "id")
     @JsonBackReference
     private Element element;

@@ -23,18 +23,18 @@ public class Space {
 
     @OneToMany(
             mappedBy = "space",
-            fetch = FetchType.LAZY,
+            fetch = FetchType.EAGER,
             cascade = CascadeType.ALL
     )
     @JsonManagedReference
     private Set<SpaceElement> spaceElements;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER, optional = true)
     @JoinColumn(name = "map_id", referencedColumnName = "id")
     @JsonBackReference
     private GameMap gameMap;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "owner_id", referencedColumnName = "id")
     @JsonBackReference
     private User owner;

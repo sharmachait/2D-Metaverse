@@ -10,6 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface GameMapRepository extends JpaRepository<GameMap, String> {
-    @Query("SELECT gm FROM GameMap gm LEFT JOIN FETCH gm.mapElements WHERE gm.id = :id")
-    Optional<GameMap> findByIdWithMapElements(@Param("id") String id);
+    @Query("SELECT gm FROM GameMap gm LEFT JOIN FETCH gm.mapElements WHERE gm.id = :gameMapId")
+    Optional<GameMap> findByIdWithMapElements(@Param("gameMapId") String gameMapId);
+
 }

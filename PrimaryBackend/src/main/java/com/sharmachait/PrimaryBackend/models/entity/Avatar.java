@@ -21,7 +21,7 @@ public class Avatar {
 
     @OneToMany(
             mappedBy = "avatar",
-            fetch = FetchType.LAZY,
+            fetch = FetchType.EAGER,
             cascade = CascadeType.PERSIST
     )
     @JsonManagedReference

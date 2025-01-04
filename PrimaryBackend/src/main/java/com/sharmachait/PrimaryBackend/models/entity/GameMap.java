@@ -1,9 +1,11 @@
 package com.sharmachait.PrimaryBackend.models.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Data
@@ -20,12 +22,11 @@ public class GameMap {
     private String name;
     @OneToMany(
             mappedBy = "gameMap",
-            fetch = FetchType.LAZY,
             cascade = CascadeType.ALL
-
     )
     @JsonManagedReference
-    private Set<MapElement> mapElements;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private Set<MapElement> mapElements = new HashSet<>();
 
     private String thumbnail;
     @OneToMany(
@@ -34,5 +35,16 @@ public class GameMap {
             cascade = CascadeType.ALL
     )
     @JsonManagedReference
-    private Set<Space> spaces;
+    private Set<Space> spaces= new HashSet<>();
+
+    @Override
+    public String toString() {
+        return "GameMap{" +
+                "id='" + id + '\'' +
+                ", width=" + width +
+                ", height=" + height +
+                ", name='" + name + '\'' +
+                '}';
+    }
+
 }

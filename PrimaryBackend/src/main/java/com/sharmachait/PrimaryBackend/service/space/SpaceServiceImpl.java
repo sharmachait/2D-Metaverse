@@ -10,8 +10,16 @@ import com.sharmachait.PrimaryBackend.service.gameMap.GameMapService;
 import com.sharmachait.PrimaryBackend.service.spaceElement.SpaceElementService;
 import com.sharmachait.PrimaryBackend.service.user.UserService;
 
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
+import org.hibernate.usertype.ParameterizedType;
+import org.modelmapper.internal.bytebuddy.asm.Advice;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 
@@ -28,7 +36,9 @@ public class SpaceServiceImpl implements SpaceService {
     private final SpaceElementService spaceElementService;
     private final ElementRepository elementRepository;
     private final SpaceElementRepository spaceElementRepository;
+    private final MapElementRepository mapElementRepository;
     private final GameMapRepository gameMapRepository;
+    private final JdbcTemplate jdbc;
 
     @Transactional
     @Override
@@ -50,55 +60,56 @@ public class SpaceServiceImpl implements SpaceService {
         return mapSpaceToSpaceDto(space);
     }
 
-    @Transactional
-    public GameMap getGameMap(String gameMapId) throws Exception {
-        return gameMapRepository.findById(gameMapId)
-                .orElseThrow(() -> new Exception("Map not found"));
-    }
 
     @Transactional
     @Override
     public SpaceDto save(String ownerID, String gameMapId, SpaceDto spaceDto) throws Exception {
-
-        User owner = userRepository.findById(ownerID).orElseThrow(()-> new Exception("User not found"));
+        User owner = userRepository.findById(ownerID)
+                .orElseThrow(() -> new Exception("User not found"));
 
         int xIndex = spaceDto.getDimensions().indexOf('x');
-        String height = spaceDto.getDimensions().substring(0,xIndex);
-        String width = spaceDto.getDimensions().substring(xIndex+1);
-
-        Set<SpaceElement> spaceElements = new HashSet<>();
-
+        String height = spaceDto.getDimensions().substring(0, xIndex);
+        String width = spaceDto.getDimensions().substring(xIndex + 1);
 
         Space spaceEntity = Space.builder()
                 .name(spaceDto.getName())
                 .height(Integer.parseInt(height))
                 .width(Integer.parseInt(width))
                 .owner(owner)
+                .spaceElements(new HashSet<>())
                 .build();
-        GameMap gameMap=null;
-        if(gameMapId != null) {
-            gameMap = getGameMap(gameMapId);
-            gameMap.getSpaces().add(spaceEntity);
-            gameMap = gameMapRepository.save(gameMap);
+
+        GameMap gameMap;
+
+        if (gameMapId != null) {
+
+            gameMap = gameMapRepository.findById(gameMapId)
+                    .orElseThrow(() -> new Exception("GameMap not found"));
 
             spaceEntity.setHeight(gameMap.getHeight());
             spaceEntity.setWidth(gameMap.getWidth());
 
-            for(MapElement mapElement: gameMap.getMapElements()){
+            List<MapElement> mapElements = jdbc.query(
+                    "select * from map_element where map_id = ?",
+                    new Object[]{gameMapId},
+                    new BeanPropertyRowMapper<>(MapElement.class)
+            );
+            Set<SpaceElement> spaceElements = new HashSet<>();
+            for (MapElement mapElement : mapElements) {
                 SpaceElement spaceElement = mapMapElementDtoToSpaceElement(mapElement, spaceEntity);
-                spaceElement = spaceElementRepository.save(spaceElement);
+                spaceElementRepository.save(spaceElement);
                 spaceElements.add(spaceElement);
             }
-        }
-        if(spaceDto.getThumbnail() != null) {
-            spaceEntity.setThumbnail(spaceDto.getThumbnail());
-        }else if(gameMap!=null ) {
-            spaceEntity.setThumbnail(gameMap.getThumbnail());
-        }
-        spaceEntity.setGameMap(gameMap);
 
-        spaceEntity.setSpaceElements(spaceElements);
-        return mapSpaceToSpaceDto(spaceRepository.save(spaceEntity));
+            spaceEntity.setThumbnail(spaceDto.getThumbnail() != null ?
+                    spaceDto.getThumbnail() : gameMap.getThumbnail());
+
+            spaceEntity.setGameMap(gameMap);
+        }
+
+        Space savedSpace = spaceRepository.save(spaceEntity);
+        savedSpace = spaceRepository.findById(savedSpace.getId()).orElseThrow(()-> new Exception("Space not found"));
+        return mapSpaceToSpaceDto(savedSpace);
     }
 
 

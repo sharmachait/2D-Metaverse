@@ -14,12 +14,12 @@ public class MapElement {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "map_id", referencedColumnName = "id")
     @JsonBackReference
     private GameMap gameMap;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "element_id", referencedColumnName = "id")
     @JsonBackReference
     private Element element;
