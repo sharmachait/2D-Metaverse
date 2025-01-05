@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Objects;
 import java.util.Set;
 
 @Data
@@ -26,4 +27,14 @@ public class Avatar {
     )
     @JsonManagedReference
     private Set<User> users;
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id); // only use the ID, not any collections
+    }
+
+    @Override
+    public String toString() {
+        return id;
+    }
 }

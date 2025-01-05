@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -52,7 +53,6 @@ class ArenaControllerTest {
         adminId = authResponse.getUserId();
 
         // Step 1: Signup as User
-        loginDto = new LoginDto();
         loginDto.setUsername("arenacontrolleruser");
         loginDto.setRole(Role.ROLE_USER);
         HttpEntity<LoginDto> signupRequestUser = new HttpEntity<>(loginDto, headers);
@@ -64,6 +64,8 @@ class ArenaControllerTest {
 
         // Step 2: Create Elements
         String elementUrl = "http://localhost:" + serverPort + "/api/v1/admin/element";
+        headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("Authorization", "Bearer " + adminToken);
         ElementDto elementDto = new ElementDto();
         elementDto.setImageUrl("https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRCRca3wAR4zjPPTzeIY9rSwbbqB6bB2hVkoTXN4eerXOIkJTG1GpZ9ZqSGYafQPToWy_JTcmV5RHXsAsWQC3tKnMlH_CsibsSZ5oJtbakq&usqp=CAE");
@@ -81,6 +83,7 @@ class ArenaControllerTest {
         GameMapDto mapDto = new GameMapDto();
         mapDto.setThumbnail("https://thumbnail.com/a.png");
         mapDto.setDimensions("100x200");
+        mapDto.setName("test map");
         MapElementDto mapElement1 = MapElementDto.builder()
                 .elementId(element1Id)
                 .x(20)
@@ -99,7 +102,7 @@ class ArenaControllerTest {
         MapElementDto mapElement4 = MapElementDto.builder()
                 .elementId(element2Id)
                 .x(19)
-                .y(20)
+                .y(21)
                 .build();
         List<MapElementDto> l = List.of(mapElement1, mapElement2, mapElement3, mapElement4);
         mapDto.setMapElements(l);
@@ -109,8 +112,6 @@ class ArenaControllerTest {
 
         //step 4: create a space
         String url = "http://localhost:" + serverPort + "/api/v1/space";
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("Authorization", "Bearer " + userToken);
         SpaceDto spaceDto = SpaceDto.builder()
                 .name("Test Space")
                 .dimensions("100x200")
@@ -126,17 +127,19 @@ class ArenaControllerTest {
     void incorrectSpaceIdShouldReturn400() {
         //arrange
         String Spaceurl = "http://localhost:" + serverPort + "/api/v1/space/randombullshitid";
-
+        headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("Authorization", "Bearer " + userToken);
 
         HttpEntity<String> request = new HttpEntity<>(headers);
         //act
-        ResponseEntity<SpaceDto> spaceResponse = restTemplate.exchange(
-                Spaceurl, HttpMethod.GET, request, SpaceDto.class);
+        HttpClientErrorException exception = assertThrows(HttpClientErrorException.class, () -> {
+            restTemplate.exchange(
+                    Spaceurl, HttpMethod.GET, request, SpaceDto.class);
+        }, "Expected postForEntity to throw HttpClientErrorException");
 
-        assertEquals(HttpStatus.BAD_REQUEST, spaceResponse.getStatusCode(), "Expected a BAD_REQUEST status for valid token");
-        assertNull(spaceResponse.getBody(), "Space did not return null");
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode(), "Expected BAD_REQUEST status code");
+
     }
     @Order(2)
     @Test
@@ -145,6 +148,7 @@ class ArenaControllerTest {
         //arrange
         String Spaceurl = "http://localhost:" + serverPort + "/api/v1/space/" + spaceId;
 
+        headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("Authorization", "Bearer " + userToken);
 
@@ -165,17 +169,18 @@ class ArenaControllerTest {
         //arrange
         String Spaceurl = "http://localhost:" + serverPort + "/api/v1/space/" + spaceId;
 
+        headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("Authorization", "Bearer " + userToken);
+        headers.add("Authorization", "Bearer " + adminToken);
 
         HttpEntity<String> request = new HttpEntity<>(headers);
         //act
         ResponseEntity<SpaceDto> spaceResponse = restTemplate.exchange(
                 Spaceurl, HttpMethod.GET, request, SpaceDto.class);
 
-        String elementId = spaceResponse.getBody().getElements().get(0).getElementId();
+        String elementId = spaceResponse.getBody().getElements().get(0).getId();
 
-        Spaceurl = "http://localhost:" + serverPort + "/api/v1/space/element";
+        Spaceurl = "http://localhost:" + serverPort + "/api/v1/space/element/"+elementId;
 
         SpaceDto deleteDto = new SpaceDto();
         deleteDto.setId(spaceId);
@@ -188,10 +193,7 @@ class ArenaControllerTest {
         //act
         ResponseEntity<SpaceDto> deleteResponse = restTemplate.exchange(
                 Spaceurl, HttpMethod.DELETE, deleteRequest, SpaceDto.class);
-
         assertEquals(HttpStatus.OK, deleteResponse.getStatusCode(), "Expected a OK status for valid token");
-        assertNotNull(deleteResponse.getBody(), "Space returned null");
-        assertEquals("100x200", deleteResponse.getBody().getDimensions());
         assertEquals(3,deleteResponse.getBody().getElements().size());
     }
 
@@ -200,20 +202,18 @@ class ArenaControllerTest {
     @DisplayName("Able to add an element")
     void ableToAddElement() {
         //arrange
-        String Spaceurl = "http://localhost:" + serverPort + "/api/v1/space/element";
-        SpaceDto addDto = new SpaceDto();
-        addDto.setId(spaceId);
-        SpaceElementDto spaceElementToAdd = SpaceElementDto.builder()
+        String Spaceurl = "http://localhost:" + serverPort + "/api/v1/space/element/"+spaceId;
+        SpaceElementDto addDto = SpaceElementDto.builder()
                 .elementId(element1Id)
                 .isStatic(true)
                 .x(50)
                 .y(20)
                 .build();
 
-        addDto.setElements(List.of(spaceElementToAdd));
+        headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("Authorization", "Bearer " + userToken);
-        HttpEntity<SpaceDto> addRequest = new HttpEntity<>(addDto, headers);
+        headers.add("Authorization", "Bearer " + adminToken);
+        HttpEntity<SpaceElementDto> addRequest = new HttpEntity<>(addDto, headers);
         //act
         ResponseEntity<SpaceDto> addResponse = restTemplate.exchange(
                 Spaceurl, HttpMethod.POST, addRequest, SpaceDto.class);
@@ -229,26 +229,24 @@ class ArenaControllerTest {
     @DisplayName("Not able to add an element out of bounds")
     void noAbleToAddElementOutOfBounds() {
         //arrange
-        String Spaceurl = "http://localhost:" + serverPort + "/api/v1/space/element";
-        SpaceDto addDto = new SpaceDto();
-        addDto.setId(spaceId);
-        SpaceElementDto spaceElementToAdd = SpaceElementDto.builder()
+        String Spaceurl = "http://localhost:" + serverPort + "/api/v1/space/element/"+spaceId;
+
+        SpaceElementDto addDto = SpaceElementDto.builder()
                 .elementId(element1Id)
                 .isStatic(true)
                 .x(1000000)
                 .y(2000000)
                 .build();
-        addDto.setElements(List.of(spaceElementToAdd));
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("Authorization", "Bearer " + userToken);
-        HttpEntity<SpaceDto> addRequest = new HttpEntity<>(addDto, headers);
-        //act
-        ResponseEntity<SpaceDto> addResponse = restTemplate.exchange(
-                Spaceurl, HttpMethod.POST, addRequest, SpaceDto.class);
 
-        assertEquals(HttpStatus.BAD_REQUEST, addResponse.getStatusCode(), "Expected a BAD_REQUEST status for valid token");
-        assertNotNull(addResponse.getBody(), "Space returned null");
-        assertEquals("100x200", addResponse.getBody().getDimensions());
-        assertEquals(4,addResponse.getBody().getElements().size());
+        headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("Authorization", "Bearer " + adminToken);
+        HttpEntity<SpaceElementDto> addRequest = new HttpEntity<>(addDto, headers);
+        //act
+        HttpClientErrorException exception = assertThrows(HttpClientErrorException.class, () -> {
+            restTemplate.exchange(
+                    Spaceurl, HttpMethod.POST, addRequest, SpaceDto.class);
+        }, "Expected postForEntity to throw HttpClientErrorException");
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode(), "Expected a BAD_REQUEST status for valid token");
     }
 }

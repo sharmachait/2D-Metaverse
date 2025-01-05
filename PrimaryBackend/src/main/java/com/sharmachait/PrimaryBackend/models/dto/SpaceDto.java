@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Objects;
 
 @Data
 @NoArgsConstructor
@@ -24,4 +25,13 @@ public class SpaceDto {
     private String mapId;
     private String ownerId;
     List<SpaceElementDto> elements;
+    @Override
+    public int hashCode() {
+        return Objects.hash(id); // only use the ID, not any collections
+    }
+
+    @Override
+    public String toString() {
+        return id;
+    }
 }

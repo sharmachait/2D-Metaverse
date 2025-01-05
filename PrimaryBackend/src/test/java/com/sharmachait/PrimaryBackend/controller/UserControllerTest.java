@@ -159,7 +159,8 @@ class UserControllerTest {
         HttpEntity<UserDto> updateRequest = new HttpEntity<>(userDto, headers);
         //act and assert
         ResponseEntity<UserDto> userUpdatedResponse = restTemplate.postForEntity(updateUrl, updateRequest, UserDto.class);
-
+        System.out.println("POST response user ID: " + userUpdatedResponse.getBody().getId());
+        System.out.println("GET request user ID parameter: " + userId);
 
 
         String url = String.format("http://localhost:%s/api/v1/user/metadata/bulk?ids=%s",

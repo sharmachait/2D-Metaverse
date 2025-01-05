@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Data
@@ -38,13 +39,13 @@ public class GameMap {
     private Set<Space> spaces= new HashSet<>();
 
     @Override
+    public int hashCode() {
+        return Objects.hash(id); // only use the ID, not any collections
+    }
+
+    @Override
     public String toString() {
-        return "GameMap{" +
-                "id='" + id + '\'' +
-                ", width=" + width +
-                ", height=" + height +
-                ", name='" + name + '\'' +
-                '}';
+        return id;
     }
 
 }

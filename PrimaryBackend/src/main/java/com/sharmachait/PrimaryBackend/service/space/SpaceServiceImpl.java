@@ -1,28 +1,15 @@
 package com.sharmachait.PrimaryBackend.service.space;
 import com.sharmachait.PrimaryBackend.config.jwt.JwtProvider;
-import com.sharmachait.PrimaryBackend.models.dto.GameMapDto;
 import com.sharmachait.PrimaryBackend.models.dto.SpaceDto;
 import com.sharmachait.PrimaryBackend.models.dto.SpaceElementDto;
 import com.sharmachait.PrimaryBackend.models.entity.*;
 import com.sharmachait.PrimaryBackend.repository.*;
-import com.sharmachait.PrimaryBackend.service.element.ElementService;
-import com.sharmachait.PrimaryBackend.service.gameMap.GameMapService;
-import com.sharmachait.PrimaryBackend.service.spaceElement.SpaceElementService;
-import com.sharmachait.PrimaryBackend.service.user.UserService;
-
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.Hibernate;
-import org.hibernate.usertype.ParameterizedType;
-import org.modelmapper.internal.bytebuddy.asm.Advice;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-
-
 import java.util.*;
 
 @Service
@@ -30,20 +17,19 @@ import java.util.*;
 public class SpaceServiceImpl implements SpaceService {
 
     private final SpaceRepository spaceRepository;
-    private final GameMapService gameMapService;
     private final UserRepository userRepository;
-    private final ElementService elementService;
-    private final SpaceElementService spaceElementService;
     private final ElementRepository elementRepository;
     private final SpaceElementRepository spaceElementRepository;
-    private final MapElementRepository mapElementRepository;
     private final GameMapRepository gameMapRepository;
     private final JdbcTemplate jdbc;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Transactional
     @Override
     public void deleteById(String authHeader, String spaceId) throws Exception {
         String userId = JwtProvider.getIdFromToken(authHeader);
+        System.out.println(spaceId);
         Space spaceEntity = spaceRepository.findById(spaceId).orElseThrow(()-> new Exception("Space not found"));
 
         if(spaceEntity.getOwner().getId().equals(userId)) {
@@ -67,7 +53,13 @@ public class SpaceServiceImpl implements SpaceService {
         User owner = userRepository.findById(ownerID)
                 .orElseThrow(() -> new Exception("User not found"));
 
+        if(gameMapId == null && spaceDto.getDimensions() == null) {
+            throw new Exception("Game map id not found and dimensions not specified");
+        }
         int xIndex = spaceDto.getDimensions().indexOf('x');
+        if(xIndex == -1) {
+            throw new Exception("Invalid dimensions");
+        }
         String height = spaceDto.getDimensions().substring(0, xIndex);
         String width = spaceDto.getDimensions().substring(xIndex + 1);
 
@@ -89,11 +81,35 @@ public class SpaceServiceImpl implements SpaceService {
             spaceEntity.setHeight(gameMap.getHeight());
             spaceEntity.setWidth(gameMap.getWidth());
 
+//            List<MapElement> mapElements = jdbc.query(
+//                    "select * from map_element where map_id = ?",
+//                    new Object[]{gameMapId},
+//                    new BeanPropertyRowMapper<>(MapElement.class)
+//            );
             List<MapElement> mapElements = jdbc.query(
-                    "select * from map_element where map_id = ?",
+                    "SELECT me.*, e.id AS element_id, e.height, e.width, e.image_url, e.is_static " +
+                            "FROM map_element me " +
+                            "JOIN element e ON me.element_id = e.id " +
+                            "WHERE me.map_id = ?",
                     new Object[]{gameMapId},
-                    new BeanPropertyRowMapper<>(MapElement.class)
+                    (rs, rowNum) -> {
+                        MapElement mapElement = new MapElement();
+                        mapElement.setId(rs.getString("id"));
+                        mapElement.setX(rs.getInt("x"));
+                        mapElement.setY(rs.getInt("y"));
+
+                        Element element = new Element();
+                        element.setId(rs.getString("element_id"));
+                        element.setHeight(rs.getInt("height"));
+                        element.setWidth(rs.getInt("width"));
+                        element.setImageUrl(rs.getString("image_url"));
+                        element.setStatic(rs.getBoolean("is_static"));
+
+                        mapElement.setElement(element);
+                        return mapElement;
+                    }
             );
+
             Set<SpaceElement> spaceElements = new HashSet<>();
             for (MapElement mapElement : mapElements) {
                 SpaceElement spaceElement = mapMapElementDtoToSpaceElement(mapElement, spaceEntity);
@@ -125,6 +141,9 @@ public class SpaceServiceImpl implements SpaceService {
         String userId = JwtProvider.getIdFromToken(authHeader);
 
         Space spaceEntity = spaceRepository.findById(spaceId).orElse(null);
+        if(spaceElementDto.getX() >= spaceEntity.getWidth() || spaceElementDto.getY() >= spaceEntity.getHeight()) {
+            throw new Exception("out of bounds");
+        }
         if(spaceEntity==null){
             throw new Exception("Space not found");
         }
@@ -134,7 +153,10 @@ public class SpaceServiceImpl implements SpaceService {
         SpaceElement spaceElement = mapSpaceElementDtoToSpaceElement(spaceElementDto, spaceEntity);
         spaceElement = spaceElementRepository.save(spaceElement);
         spaceEntity.getSpaceElements().add(spaceElement);
-        return mapSpaceToSpaceDto(spaceRepository.save(spaceEntity));
+        Space space = spaceRepository.save(spaceEntity);
+        spaceRepository.flush();
+        entityManager.clear();
+        return mapSpaceToSpaceDto(space);
     }
 
     @Override
@@ -166,15 +188,23 @@ public class SpaceServiceImpl implements SpaceService {
         if(!Objects.equals(userId, space.getOwner().getId())) {
             throw new Exception("Unauthorized");
         }
-        for(SpaceElement se : space.getSpaceElements()){
-            if(se.getId().equals(spaceElement.getId())){
-                spaceElement=se;
-                break;
+        Set<SpaceElement> spaceElements =space.getSpaceElements();
+        SpaceElement seToDelete = null;
+        for(SpaceElement se:spaceElements){
+            if(se.getId().equals(elementId)){
+                seToDelete = se;
             }
         }
-        space.getSpaceElements().remove(spaceElement);
-        spaceElementRepository.delete(spaceElement);
+
+        if(seToDelete!=null)
+        {
+            spaceElements.remove(seToDelete);
+        }
+        space.setSpaceElements(spaceElements);
         space = spaceRepository.save(space);
+//        spaceElementRepository.deleteById(spaceElement.getId());
+        spaceRepository.flush();
+        entityManager.clear();
         return mapSpaceToSpaceDto(space);
     }
 
@@ -211,8 +241,33 @@ public class SpaceServiceImpl implements SpaceService {
                 .id(spaceEntity.getId())
                 .build();
         List<SpaceElementDto> spaceElementDtos = new ArrayList<>();
-        for(SpaceElement spaceElement : spaceEntity.getSpaceElements()){
-            SpaceElementDto spaceElementDto = mapSpaceElementToSpaceElementDto(spaceElement);
+        List<SpaceElement> spaceElements = jdbc.query(
+                "SELECT se.id AS space_element_id, se.space_id, se.element_id, se.x, se.y, " +
+                        "e.id AS element_id, e.height, e.width, e.image_url, e.is_static " +
+                        "FROM space_element se " +
+                        "JOIN element e ON se.element_id = e.id " +
+                        "WHERE se.space_id = ?",
+                new Object[]{spaceEntity.getId()},
+                (rs, rowNum) -> {
+                    SpaceElement spaceElement = new SpaceElement();
+                    spaceElement.setId(rs.getString("space_element_id"));
+                    spaceElement.setX(rs.getInt("x"));
+                    spaceElement.setY(rs.getInt("y"));
+
+                    Element element = new Element();
+                    element.setId(rs.getString("element_id"));
+                    element.setHeight(rs.getInt("height"));
+                    element.setWidth(rs.getInt("width"));
+                    element.setImageUrl(rs.getString("image_url"));
+                    element.setStatic(rs.getBoolean("is_static"));
+
+                    spaceElement.setElement(element);
+                    return spaceElement;
+                }
+        );
+
+        for(SpaceElement spaceElement : spaceElements){
+            SpaceElementDto spaceElementDto = mapSpaceElementToSpaceElementDto(spaceElement, spaceEntity);
             spaceElementDtos.add(spaceElementDto);
         }
         spaceDto.setElements(spaceElementDtos);
@@ -226,6 +281,16 @@ public class SpaceServiceImpl implements SpaceService {
                 .spaceId(spaceElement.getSpace().getId())
                 .isStatic(spaceElement.getElement().isStatic())
                 .elementId(spaceElement.getId())
+                .build();
+    }
+
+    public SpaceElementDto mapSpaceElementToSpaceElementDto(SpaceElement spaceElement, Space spaceEntity){
+        return SpaceElementDto.builder()
+                .y(spaceElement.getY())
+                .x(spaceElement.getX())
+                .spaceId(spaceEntity.getId())
+                .isStatic(spaceElement.getElement().isStatic())
+                .id(spaceElement.getId())
                 .build();
     }
 }

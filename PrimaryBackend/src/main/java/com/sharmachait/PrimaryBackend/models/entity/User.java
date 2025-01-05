@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Objects;
 import java.util.Set;
 
 @Builder
@@ -32,4 +33,14 @@ public class User {
     @OneToMany(mappedBy = "owner", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JsonManagedReference
     private Set<Space> ownedSpaces;
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id); // only use the ID, not any collections
+    }
+
+    @Override
+    public String toString() {
+        return id;
+    }
 }

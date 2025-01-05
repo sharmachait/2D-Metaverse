@@ -46,6 +46,7 @@ public class UserController {
     public ResponseEntity<?> bulkMetadata(@RequestParam("ids") String userIdsParam){
         String cleanUserIds = userIdsParam.replaceAll("\\[|\\]", "").trim();
         String[] userIds = cleanUserIds.split(",");
+
         try{
             List<UserDto> users = new ArrayList<>();
             for(String id:userIds){
@@ -59,7 +60,38 @@ public class UserController {
             return ResponseEntity.ok(users);
         }
         catch(Exception e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e);
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

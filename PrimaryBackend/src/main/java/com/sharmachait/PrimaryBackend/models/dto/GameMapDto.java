@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Objects;
 
 @Data
 @AllArgsConstructor
@@ -20,4 +21,13 @@ public class GameMapDto {
     private String name;
     private String dimensions;
     private List<MapElementDto> mapElements;
+    @Override
+    public int hashCode() {
+        return Objects.hash(id); // only use the ID, not any collections
+    }
+
+    @Override
+    public String toString() {
+        return id;
+    }
 }
