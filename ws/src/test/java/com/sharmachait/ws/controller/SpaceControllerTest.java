@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharmachait.ws.models.dto.*;
 import com.sharmachait.ws.models.dto.Role;
-import com.sharmachait.ws.models.messages.Message;
-import com.sharmachait.ws.models.messages.Payload;
+
 import com.sharmachait.ws.models.messages.requestMessages.joinSpace.JoinSpaceRequest;
 import com.sharmachait.ws.models.messages.MessageType;
+import com.sharmachait.ws.models.messages.requestMessages.joinSpace.JoinSpaceRequestPayload;
 import com.sharmachait.ws.models.messages.requestMessages.movement.MovementRequest;
 import com.sharmachait.ws.models.messages.requestMessages.movement.MovementRequestPayload;
 import com.sharmachait.ws.models.messages.responseMessages.joinedSpace.JoinSpaceResponse;
@@ -274,17 +274,17 @@ class SpaceControllerTest {
     @Test
     void getAckOnJoiningSpaceAndBroadCast() throws ExecutionException, InterruptedException, TimeoutException {
         //join a room
-        JoinSpaceRequest ws1Message = (JoinSpaceRequest) Message.builder()
+        JoinSpaceRequest ws1Message = JoinSpaceRequest.builder()
                 .type(MessageType.JOIN)
-                .payload(Payload.builder()
+                .payload(JoinSpaceRequestPayload.builder()
                         .spaceId(spaceId)
                         .token(adminToken)
                         .build())
                 .build();
 
-        JoinSpaceRequest ws2Message = (JoinSpaceRequest) Message.builder()
+        JoinSpaceRequest ws2Message = JoinSpaceRequest.builder()
                 .type(MessageType.JOIN)
-                .payload(Payload.builder()
+                .payload(JoinSpaceRequestPayload.builder()
                         .spaceId(spaceId)
                         .token(userToken)
                         .build())
@@ -350,7 +350,7 @@ class SpaceControllerTest {
     @Test
     void userShouldNotBeAbleToJumpABlock() throws ExecutionException, InterruptedException, TimeoutException {
         //move
-        MovementRequest sentMessage = (MovementRequest) Message.builder()
+        MovementRequest sentMessage = MovementRequest.builder()
                 .type(MessageType.MOVE)
                 .payload(MovementRequestPayload.builder()
                         .x(adminX+2)

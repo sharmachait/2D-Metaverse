@@ -1,14 +1,15 @@
 package com.sharmachait.ws.models.messages.requestMessages.joinSpace;
 
-import com.sharmachait.ws.models.messages.Payload;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode
 @Data
-@SuperBuilder(toBuilder = true)
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class JoinSpaceRequestPayload extends Payload {
+public class JoinSpaceRequestPayload {
     private String senderId;
+    private String token;
+    private String userId;
+    private String spaceId;
 }
