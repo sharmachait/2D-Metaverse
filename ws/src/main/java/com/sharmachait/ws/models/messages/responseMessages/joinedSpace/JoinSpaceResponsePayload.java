@@ -9,6 +9,7 @@ import java.util.List;
 @NoArgsConstructor
 public class JoinSpaceResponsePayload{
     private List<UserSpawn> users;
+    private String message;
     private String token;
     private String userId;
     private String spaceId;
