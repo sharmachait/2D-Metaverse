@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharmachait.ws.models.dto.*;
 import com.sharmachait.ws.models.dto.Role;
 
+import com.sharmachait.ws.models.messages.ChatMessage.ChatMessage;
 import com.sharmachait.ws.models.messages.requestMessages.joinSpace.JoinSpaceRequest;
 import com.sharmachait.ws.models.messages.MessageType;
 import com.sharmachait.ws.models.messages.requestMessages.joinSpace.JoinSpaceRequestPayload;
@@ -220,7 +221,7 @@ class SpaceControllerTest {
             String typeString = jsonNode.get("type").asText();
             MessageType type = MessageType.valueOf(typeString);
             return switch (type) {
-                case SPACE_JOINED, SPACE_JOINED_BROADCAST
+                case SPACE_JOINED, SPACE_JOINED_BROADCAST, BAD_REQUEST
                         -> objectMapper.readValue(jsonPayload, JoinSpaceResponse.class);
                 case JOIN
                         -> objectMapper.readValue(jsonPayload, JoinSpaceRequest.class);
@@ -228,6 +229,7 @@ class SpaceControllerTest {
                         -> objectMapper.readValue(jsonPayload, MovementResponse.class);
                 case USER_LEFT
                         -> objectMapper.readValue(jsonPayload, LeaveSpaceResponse.class);
+                case CHAT -> objectMapper.readValue(jsonPayload, ChatMessage.class);
             };
         } catch (Exception e) {
             return null;

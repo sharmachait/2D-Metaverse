@@ -17,22 +17,41 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 @Slf4j
 @RequiredArgsConstructor
 public class WebSocketEventListener {
-    @Autowired
-    SimpMessageSendingOperations messagingTemplate;
+
+    private final SimpMessageSendingOperations messagingTemplate;
 
     @EventListener
     public void handleWebSocketDisconnect(SessionDisconnectEvent event) {
-        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-        String userSpace = (String) headerAccessor.getSessionAttributes().get("user___space");
-        String userId = userSpace.split("___")[0];
-        String spaceId = userSpace.split("___")[1];
-        LeaveSpaceResponse response = LeaveSpaceResponse.builder()
-                .type(MessageType.USER_LEFT)
-                .payload(LeaveSpaceResponsePayload.builder()
-                        .spaceId(spaceId)
-                        .userId(userId)
-                        .build())
-                .build();
-        messagingTemplate.convertAndSend("/topic/space/"+spaceId, response);
+        try {
+            StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
+            String userSpace = (String) headerAccessor.getSessionAttributes().get("user___space");
+
+            if (userSpace == null) {
+                log.warn("No user___space attribute found in session");
+                return;
+            }
+
+            String[] parts = userSpace.split("___");
+            if (parts.length != 2) {
+                log.warn("Invalid user___space format: {}", userSpace);
+                return;
+            }
+
+            String userId = parts[0];
+            String spaceId = parts[1];
+
+            LeaveSpaceResponse response = LeaveSpaceResponse.builder()
+                    .type(MessageType.USER_LEFT)
+                    .payload(LeaveSpaceResponsePayload.builder()
+                            .spaceId(spaceId)
+                            .userId(userId)
+                            .build())
+                    .build();
+
+            messagingTemplate.convertAndSend("/topic/space/" + spaceId, response);
+            log.debug("User {} left space {}", userId, spaceId);
+        } catch (Exception e) {
+            log.error("Error handling WebSocket disconnect event", e);
+        }
     }
 }

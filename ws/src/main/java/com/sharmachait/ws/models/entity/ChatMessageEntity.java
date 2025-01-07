@@ -6,24 +6,26 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Date;
 import java.util.Objects;
 
 @Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
 @Entity
-public class ChatRoom {
+@AllArgsConstructor
+@Builder
+@NoArgsConstructor
+public class ChatMessageEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    private String chatId;
     private String sender;
     private String recipient;
-    @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ChatMessageEntity> messages = new ArrayList<>();
+    private String content;
+    private String chatId;
+    private Date date;
+    @ManyToOne
+    @JoinColumn(name = "chat_room_id", nullable = false) // Foreign key column
+    private ChatRoom chatRoom;
 
     @Override
     public int hashCode() {

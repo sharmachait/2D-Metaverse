@@ -1,6 +1,6 @@
 package com.sharmachait.ws.service;
 
-import com.sharmachait.ws.models.entity.ChatMessage;
+import com.sharmachait.ws.models.entity.ChatMessageEntity;
 import com.sharmachait.ws.repository.ChatMessageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,24 +18,24 @@ public class ChatMessageService {
     @Autowired
     private final ChatRoomService chatRoomService;
 
-    public ChatMessage save(ChatMessage chatMessage) throws NoSuchElementException {
+    public ChatMessageEntity save(ChatMessageEntity chatMessageEntity) throws NoSuchElementException {
         try{
-            String chatId = chatRoomService.getChatRoomId(chatMessage.getSenderId(),chatMessage.getRecipientId(),true);
-            chatMessage.setChatId(chatId);
-            return chatMessageRepository.save(chatMessage);
+            String chatId = chatRoomService.getChatRoomId(chatMessageEntity.getSender(), chatMessageEntity.getRecipient(),true);
+            chatMessageEntity.setChatId(chatId);
+            return chatMessageRepository.save(chatMessageEntity);
         } catch (NoSuchElementException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public List<ChatMessage> getChatMessages(Long senderId, Long recipientId) throws NoSuchElementException {
+    public List<ChatMessageEntity> getChatMessages(String senderId, String recipientId) throws NoSuchElementException {
         try{
             String chatId = chatRoomService.getChatRoomId(senderId,recipientId,false);
-            List<ChatMessage> chatMessages = chatMessageRepository.findByChatId(chatId);
-            if(chatMessages==null){
-                chatMessages = new ArrayList<>();
+            List<ChatMessageEntity> chatMessageEntities = chatMessageRepository.findByChatId(chatId);
+            if(chatMessageEntities ==null){
+                chatMessageEntities = new ArrayList<>();
             }
-            return chatMessages;
+            return chatMessageEntities;
         }
         catch (NoSuchElementException e) {
             throw new RuntimeException(e);

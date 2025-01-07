@@ -17,10 +17,10 @@ public class ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
 
     public String getChatRoomId(
-            Long senderId,
-            Long recipientId,
+            String senderId,
+            String recipientId,
             boolean createNewRoomIfNotExist) throws NoSuchElementException {
-        Optional<ChatRoom> chatRoom = chatRoomRepository.findBySenderIdAndRecipientId(senderId, recipientId);
+        Optional<ChatRoom> chatRoom = chatRoomRepository.findBySenderAndRecipient(senderId, recipientId);
         if (chatRoom.isPresent()) {
             return chatRoom.get().getChatId();
         }
@@ -32,21 +32,21 @@ public class ChatRoomService {
             }
         }
     }
-    public String createChat(Long senderId, Long recipientId) {
-        String chatId = senderId.toString()+"_"+recipientId.toString();
-        String chatIdReverse = recipientId.toString()+"_"+senderId.toString();
+    public String createChat(String senderId, String recipientId) {
+        String chatId = senderId+"_"+recipientId;
+        String chatIdReverse = recipientId+"_"+senderId;
 
         ChatRoom senderRecipient = ChatRoom.builder()
                 .chatId(chatId)
-                .senderId(senderId)
-                .recipientId(recipientId)
+                .sender(senderId)
+                .recipient(recipientId)
                 .build();
         chatRoomRepository.save(senderRecipient);
 
         ChatRoom recipientSender = ChatRoom.builder()
                 .chatId(chatIdReverse)
-                .senderId(recipientId)
-                .recipientId(senderId)
+                .sender(recipientId)
+                .recipient(senderId)
                 .build();
         chatRoomRepository.save(recipientSender);
 
