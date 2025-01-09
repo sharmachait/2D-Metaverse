@@ -3,9 +3,8 @@ package com.sharmachait.ws.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharmachait.ws.models.dto.*;
-import com.sharmachait.ws.models.dto.Role;
+import com.sharmachait.ws.models.entity.Role;
 
-import com.sharmachait.ws.models.messages.ChatMessage.ChatMessage;
 import com.sharmachait.ws.models.messages.requestMessages.joinSpace.JoinSpaceRequest;
 import com.sharmachait.ws.models.messages.MessageType;
 import com.sharmachait.ws.models.messages.requestMessages.joinSpace.JoinSpaceRequestPayload;

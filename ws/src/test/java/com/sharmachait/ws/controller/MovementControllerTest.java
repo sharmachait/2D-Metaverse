@@ -1,7 +1,7 @@
 package com.sharmachait.ws.controller;
 
 import com.sharmachait.ws.models.dto.LoginDto;
-import com.sharmachait.ws.models.dto.Role;
+import com.sharmachait.ws.models.entity.Role;
 import com.sharmachait.ws.models.messages.MessageType;
 import com.sharmachait.ws.models.messages.requestMessages.movement.MovementRequest;
 import com.sharmachait.ws.models.messages.requestMessages.movement.MovementRequestPayload;
@@ -26,7 +26,6 @@ import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 

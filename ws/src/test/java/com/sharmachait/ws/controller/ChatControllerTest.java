@@ -3,7 +3,7 @@ package com.sharmachait.ws.controller;
 import com.sharmachait.ws.config.jwt.JwtProvider;
 import com.sharmachait.ws.models.dto.ChatMessageEntityDto;
 import com.sharmachait.ws.models.dto.LoginDto;
-import com.sharmachait.ws.models.dto.Role;
+import com.sharmachait.ws.models.entity.Role;
 import com.sharmachait.ws.models.messages.ChatMessage.ChatMessage;
 import com.sharmachait.ws.models.messages.ChatMessage.ChatMessagePayload;
 import com.sharmachait.ws.models.messages.MessageType;

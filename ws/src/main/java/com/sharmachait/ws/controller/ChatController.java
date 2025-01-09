@@ -26,7 +26,7 @@ public class ChatController {
 
     private final ChatMessageService chatMessageService;
     private final SimpMessagingTemplate messagingTemplate;
-    private final JdbcTemplate jdbc;
+//    private final JdbcTemplate jdbc;
 
     @GetMapping("/messages/{senderId}/{recipientId}")
     public ResponseEntity<List<ChatMessageEntity>> findChatMessages(
