@@ -16,13 +16,13 @@ public class ChatRoomService {
     @Autowired
     private final ChatRoomRepository chatRoomRepository;
 
-    public String getChatRoomId(
+    public ChatRoom getChatRoomId(
             String senderId,
             String recipientId,
             boolean createNewRoomIfNotExist) throws NoSuchElementException {
         Optional<ChatRoom> chatRoom = chatRoomRepository.findBySenderAndRecipient(senderId, recipientId);
         if (chatRoom.isPresent()) {
-            return chatRoom.get().getChatId();
+            return chatRoom.get();
         }
         else {
             if(createNewRoomIfNotExist) {
@@ -32,7 +32,7 @@ public class ChatRoomService {
             }
         }
     }
-    public String createChat(String senderId, String recipientId) {
+    public ChatRoom createChat(String senderId, String recipientId) {
         String chatId = senderId+"_"+recipientId;
         String chatIdReverse = recipientId+"_"+senderId;
 
@@ -41,15 +41,16 @@ public class ChatRoomService {
                 .sender(senderId)
                 .recipient(recipientId)
                 .build();
-        chatRoomRepository.save(senderRecipient);
+
 
         ChatRoom recipientSender = ChatRoom.builder()
                 .chatId(chatIdReverse)
                 .sender(recipientId)
                 .recipient(senderId)
                 .build();
+
         chatRoomRepository.save(recipientSender);
 
-        return chatId;
+        return chatRoomRepository.save(senderRecipient);
     }
 }

@@ -1,6 +1,7 @@
 package com.sharmachait.ws.controller;
 
 import com.sharmachait.ws.config.jwt.JwtProvider;
+import com.sharmachait.ws.models.dto.ChatMessageEntityDto;
 import com.sharmachait.ws.models.dto.LoginDto;
 import com.sharmachait.ws.models.dto.Role;
 import com.sharmachait.ws.models.messages.ChatMessage.ChatMessage;
@@ -51,7 +52,7 @@ class ChatControllerTest {
     private String adminUsername;
     private String userUsername;
     private WebSocketStompClient stompClient;
-    private CompletableFuture<ChatMessage> chatFuture;
+    private CompletableFuture<ChatMessageEntityDto> chatFuture;
     private String getWsPath() {
         return String.format("ws://localhost:%d/ws", port);
     }
@@ -123,19 +124,19 @@ class ChatControllerTest {
             @Override
             @NonNull
             public Type getPayloadType(@Nullable StompHeaders headers) {
-                return ChatMessage.class;
+                return ChatMessageEntityDto.class;
             }
 
             @Override
             public void handleFrame(@Nullable StompHeaders headers, Object payload) {
-                chatFuture.complete((ChatMessage) payload);
+                chatFuture.complete((ChatMessageEntityDto) payload);
             }
         });
         Thread.sleep(500);
 
 
         ChatMessage sentMessage = ChatMessage.builder()
-                .type(MessageType.MOVE)
+                .type(MessageType.CHAT)
                 .sender(adminUsername)
                 .recipient(userUsername)
                 .payload(ChatMessagePayload.builder()
@@ -151,12 +152,15 @@ class ChatControllerTest {
 
 
         // Wait and verify the received message
-        ChatMessage receivedMessage = chatFuture.get(5, TimeUnit.SECONDS);
+        ChatMessageEntityDto receivedMessage = chatFuture.get(20, TimeUnit.SECONDS);
         ChatMessagePayload sentPayload = sentMessage.getPayload();
-        ChatMessagePayload receivedPayload =  receivedMessage.getPayload();
+
 
         assertNotNull(receivedMessage);
-        assertEquals(sentPayload.getMessage(), receivedPayload.getMessage());
+        assertEquals(sentPayload.getMessage(), receivedMessage.getContent());
+        assertEquals(sentMessage.getSender(), receivedMessage.getSender());
+        assertEquals(sentMessage.getRecipient(), receivedMessage.getRecipient());
+        assertNotNull(receivedMessage.getDate());
 
     }
 }

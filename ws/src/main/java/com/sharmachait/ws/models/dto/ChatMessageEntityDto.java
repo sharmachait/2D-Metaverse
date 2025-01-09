@@ -1,29 +1,26 @@
-package com.sharmachait.ws.models.entity;
+package com.sharmachait.ws.models.dto;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.sharmachait.ws.models.entity.ChatRoom;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
 import java.util.Objects;
 
 @Data
-@Builder
 @AllArgsConstructor
+@Builder
 @NoArgsConstructor
-@Entity
-public class Notification {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+public class ChatMessageEntityDto {
     private String id;
-    private String senderId;
-    private String recipientId;
-    private String message;
-
+    private String sender;
+    private String recipient;
+    private String content;
+    private String chatId;
+    private Date date;
     @Override
     public int hashCode() {
         return Objects.hash(id); // only use the ID, not any collections

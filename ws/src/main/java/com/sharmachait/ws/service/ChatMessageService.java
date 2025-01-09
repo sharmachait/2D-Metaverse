@@ -1,6 +1,7 @@
 package com.sharmachait.ws.service;
 
 import com.sharmachait.ws.models.entity.ChatMessageEntity;
+import com.sharmachait.ws.models.entity.ChatRoom;
 import com.sharmachait.ws.repository.ChatMessageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,20 +19,20 @@ public class ChatMessageService {
     @Autowired
     private final ChatRoomService chatRoomService;
 
-    public ChatMessageEntity save(ChatMessageEntity chatMessageEntity) throws NoSuchElementException {
+    public ChatMessageEntity save(ChatMessageEntity chatMessageEntity) throws Exception {
         try{
-            String chatId = chatRoomService.getChatRoomId(chatMessageEntity.getSender(), chatMessageEntity.getRecipient(),true);
-            chatMessageEntity.setChatId(chatId);
+            ChatRoom chatRoom = chatRoomService.getChatRoomId(chatMessageEntity.getSender(), chatMessageEntity.getRecipient(),true);
+            chatMessageEntity.setChatRoom(chatRoom);
             return chatMessageRepository.save(chatMessageEntity);
-        } catch (NoSuchElementException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new Exception(e);
         }
     }
 
     public List<ChatMessageEntity> getChatMessages(String senderId, String recipientId) throws NoSuchElementException {
         try{
-            String chatId = chatRoomService.getChatRoomId(senderId,recipientId,false);
-            List<ChatMessageEntity> chatMessageEntities = chatMessageRepository.findByChatId(chatId);
+            ChatRoom chatRoom = chatRoomService.getChatRoomId(senderId,recipientId,false);
+            List<ChatMessageEntity> chatMessageEntities = chatMessageRepository.findByChatRoom_Id(chatRoom.getId());
             if(chatMessageEntities ==null){
                 chatMessageEntities = new ArrayList<>();
             }

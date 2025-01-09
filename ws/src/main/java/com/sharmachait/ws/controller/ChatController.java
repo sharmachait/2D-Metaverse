@@ -1,5 +1,6 @@
 package com.sharmachait.ws.controller;
 
+import com.sharmachait.ws.models.dto.ChatMessageEntityDto;
 import com.sharmachait.ws.models.entity.ChatMessageEntity;
 import com.sharmachait.ws.models.messages.ChatMessage.ChatMessage;
 import com.sharmachait.ws.models.messages.MessageType;
@@ -55,13 +56,24 @@ public class ChatController {
         chatMessageEntity.setContent(chatMessage.getPayload().getMessage());
         chatMessageEntity.setDate(Date.from(Instant.now()));
 
+        try{
+            ChatMessageEntity savedMessage = chatMessageService.save(chatMessageEntity);
+            String recipient = chatMessage.getRecipient();
+            ChatMessageEntityDto dto = ChatMessageEntityDto.builder()
+                    .date(savedMessage.getDate())
+                    .id(savedMessage.getId())
+                    .chatId(savedMessage.getChatId())
+                    .content(savedMessage.getContent())
+                    .recipient(recipient)
+                    .sender(savedMessage.getSender())
+                    .build();
+            messagingTemplate.convertAndSendToUser(
+                    recipient,
+                    "/queue/messages",
+                    dto); // user/recipient/queue/messages
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
-        ChatMessageEntity savedMessage = chatMessageService.save(chatMessageEntity);
-        String recipient = chatMessage.getRecipient();
-
-        messagingTemplate.convertAndSendToUser(
-                recipient,
-                "/queue/messages",
-                savedMessage); // user/recipient/queue/messages
     }
 }

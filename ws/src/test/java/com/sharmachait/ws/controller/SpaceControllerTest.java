@@ -229,7 +229,7 @@ class SpaceControllerTest {
                         -> objectMapper.readValue(jsonPayload, MovementResponse.class);
                 case USER_LEFT
                         -> objectMapper.readValue(jsonPayload, LeaveSpaceResponse.class);
-                case CHAT -> objectMapper.readValue(jsonPayload, ChatMessage.class);
+                case CHAT -> objectMapper.readValue(jsonPayload, ChatMessageEntityDto.class);
             };
         } catch (Exception e) {
             return null;

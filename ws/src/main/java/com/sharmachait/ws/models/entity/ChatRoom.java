@@ -17,7 +17,7 @@ import java.util.Objects;
 @Entity
 public class ChatRoom {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     private String chatId;
     private String sender;
