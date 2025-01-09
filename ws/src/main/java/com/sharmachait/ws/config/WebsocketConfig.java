@@ -10,8 +10,13 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.persistence.EntityManagerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -26,6 +31,9 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -34,6 +42,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 import javax.crypto.SecretKey;
 import javax.sql.DataSource;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
 
 @Configuration
@@ -69,9 +78,39 @@ public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
 
         messageConverters.add(converter);
 
-        return false; //Spring's default converters are completely bypassed, giving you full control over the conversion process.
+        return false;
     }
-    @Bean
+    @Primary
+    @Bean(name="chat")
+    public DataSource dbContextChat(){
+        DriverManagerDataSource ds = new DriverManagerDataSource();
+        ds.setDriverClassName("org.postgresql.Driver");
+        ds.setUrl("jdbc:postgresql://ep-soft-recipe-a189x52v.ap-southeast-1.aws.neon.tech/chat?sslmode=require");
+        ds.setUsername("learning_postgres_owner");
+        ds.setPassword("t8qELP1OjCFp");
+        return ds;
+    }
+
+    @Primary
+    @Bean(name = "chatEntityManagerFactory")
+    public LocalContainerEntityManagerFactoryBean chatEntityManagerFactory(
+            EntityManagerFactoryBuilder builder, @Qualifier("chat") DataSource dataSource) {
+        return builder
+                .dataSource(dataSource)
+                .packages("com.sharmachait.ws.models.entity")
+                .persistenceUnit("chat")
+                .properties(Collections.singletonMap("hibernate.hbm2ddl.auto", "create-drop"))
+                .build();
+    }
+
+    @Primary
+    @Bean(name = "chatTransactionManager")
+    public PlatformTransactionManager chatTransactionManager(
+            @Qualifier("chatEntityManagerFactory") EntityManagerFactory entityManagerFactory) {
+        return new JpaTransactionManager(entityManagerFactory);
+    }
+
+    @Bean(name="metaverse")
     public DataSource dbContext(){
         DriverManagerDataSource ds = new DriverManagerDataSource();
         ds.setDriverClassName("org.postgresql.Driver");
@@ -80,6 +119,11 @@ public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
         ds.setPassword("t8qELP1OjCFp");
         return ds;
     }
+    @Bean(name = "metaverseJdbcTemplate")
+    public JdbcTemplate metaverseJdbcTemplate(@Qualifier("metaverse") DataSource dataSource) {
+        return new JdbcTemplate(dataSource);
+    }
+
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(new ChannelInterceptor() {

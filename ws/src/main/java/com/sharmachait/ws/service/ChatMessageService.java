@@ -23,6 +23,7 @@ public class ChatMessageService {
         try{
             ChatRoom chatRoom = chatRoomService.getChatRoomId(chatMessageEntity.getSender(), chatMessageEntity.getRecipient(),true);
             chatMessageEntity.setChatRoom(chatRoom);
+            chatMessageEntity.setChatId(chatRoom.getChatId());
             return chatMessageRepository.save(chatMessageEntity);
         } catch (Exception e) {
             throw new Exception(e);
