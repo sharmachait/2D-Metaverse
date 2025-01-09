@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./thumbnail.jpg" alt="Virtual Space Platform Demo" width="800"/>
+  <img src="https://github.com/sharmachait/gather.town/blob/master/thumbnail.jpg" alt="Virtual Space Platform Demo" width="800"/>
 </div>
 
 # Gather.town Clone
