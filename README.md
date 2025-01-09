@@ -1,4 +1,6 @@
-![Virtual Space Platform Demo](./thumpnail.jpg)
+<div align="center">
+  <img src="./thumbnail.jpg" alt="Virtual Space Platform Demo" width="800"/>
+</div>
 
 # Gather.town Clone
 A real-time virtual space platform built with Spring Boot, WebSocket, and WebRTC that allows users to create and navigate virtual spaces while enabling proximity-based chat and video calling.
