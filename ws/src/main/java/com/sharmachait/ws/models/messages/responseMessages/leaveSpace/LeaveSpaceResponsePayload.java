@@ -10,5 +10,6 @@ import lombok.*;
 public class LeaveSpaceResponsePayload{
     private String token;
     private String userId;
+    private String email;
     private String spaceId;
 }

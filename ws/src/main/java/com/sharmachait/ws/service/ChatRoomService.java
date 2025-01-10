@@ -16,7 +16,7 @@ public class ChatRoomService {
     @Autowired
     private final ChatRoomRepository chatRoomRepository;
 
-    public ChatRoom getChatRoomId(
+    public ChatRoom getChatRoom(
             String senderId,
             String recipientId,
             boolean createNewRoomIfNotExist) throws NoSuchElementException {

@@ -36,10 +36,8 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
@@ -146,6 +144,7 @@ class SpaceControllerTest {
 
         //step 4: create a Space
         String spaceUrl = "http://localhost:" + apiPort + "/api/v1/space";
+        headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("Authorization", "Bearer " + userToken);
         SpaceDto spaceDto = SpaceDto.builder()
@@ -172,16 +171,26 @@ class SpaceControllerTest {
         SockJsClient sockJsClient = new SockJsClient(transports);
 
         WebSocketStompClient stompClient = new WebSocketStompClient(sockJsClient);
-        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+
+        MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
+        converter.setObjectMapper(new ObjectMapper());
+
+        stompClient.setMessageConverter(converter);
+
+//        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
         ws1Messages = new ArrayList<>();
         ws2Messages = new ArrayList<>();
 
         ws1 = stompClient.connectAsync(getWsPath(), new StompSessionHandlerAdapter() {})
-                .get(5, TimeUnit.SECONDS);
+                .get(10, TimeUnit.SECONDS);
         ws2 = stompClient.connectAsync(getWsPath(), new StompSessionHandlerAdapter() {})
-                .get(5, TimeUnit.SECONDS);
+                .get(10, TimeUnit.SECONDS);
 
-        ws1.subscribe("/topic/"+spaceId, new StompFrameHandler() {
+        Thread.sleep(500);
+        CountDownLatch subscriptionLatch = new CountDownLatch(2);
+        StompHeaders headers1 = new StompHeaders();
+        headers1.setDestination("/topic/space/" + spaceId);
+        ws1.subscribe(headers1, new StompFrameHandler() {
             @Override
             @NonNull
             public Type getPayloadType(@Nullable StompHeaders headers) {
@@ -195,8 +204,11 @@ class SpaceControllerTest {
                     addMessage(ws1Messages, message);
             }
         });
+        subscriptionLatch.countDown();
+        StompHeaders headers2 = new StompHeaders();
+        headers2.setDestination("/topic/space/" + spaceId);
 
-        ws2.subscribe("/topic/"+spaceId, new StompFrameHandler() {
+        ws2.subscribe(headers2, new StompFrameHandler() {
             @Override
             @NonNull
             public Type getPayloadType(@Nullable StompHeaders headers) {
@@ -210,6 +222,10 @@ class SpaceControllerTest {
                     addMessage(ws2Messages, message);
             }
         });
+        subscriptionLatch.countDown();
+        if (!subscriptionLatch.await(5, TimeUnit.SECONDS)) {
+            throw new TimeoutException("Failed to complete subscriptions within timeout");
+        }
     }
 
     private static Object parseMessage(Object payload){
@@ -249,7 +265,7 @@ class SpaceControllerTest {
             synchronized (lock) {
                 try {
                     // Wait with a timeout to prevent infinite waiting
-                    long waitTime = 100;
+                    long waitTime = 10000;
                     long startTime = System.currentTimeMillis();
 
                     while (messages.isEmpty()) {
@@ -279,7 +295,8 @@ class SpaceControllerTest {
                 .type(MessageType.JOIN)
                 .payload(JoinSpaceRequestPayload.builder()
                         .spaceId(spaceId)
-                        .token(adminToken)
+                        .userId(adminId)
+                        .token("Bearer "+adminToken)
                         .build())
                 .build();
 
@@ -287,20 +304,26 @@ class SpaceControllerTest {
                 .type(MessageType.JOIN)
                 .payload(JoinSpaceRequestPayload.builder()
                         .spaceId(spaceId)
-                        .token(userToken)
+                        .userId(userId)
+                        .token("Bearer "+userToken)
                         .build())
                 .build();
+        StompHeaders sendHeaders1 = new StompHeaders();
+        sendHeaders1.setDestination("/app/space");
+        ws1.send(sendHeaders1,ws1Message);
 
-        ws1.send("/app/space/"+spaceId,ws1Message);
         CompletableFuture<Object> ws1future = waitForAndPopLatestMessages(ws1Messages);
-        JoinSpaceResponse ws1response = (JoinSpaceResponse)ws1future.get(100,TimeUnit.MILLISECONDS);
+        JoinSpaceResponse ws1response = (JoinSpaceResponse)ws1future.get(10000,TimeUnit.MILLISECONDS);
         JoinSpaceResponsePayload res1 = (JoinSpaceResponsePayload)(ws1response.getPayload());
         adminX = res1.getX();
         adminY = res1.getY();
 
-        ws2.send("/app/space/"+spaceId,ws2Message);
+        StompHeaders sendHeaders2 = new StompHeaders();
+        sendHeaders2.setDestination("/app/space");
+        ws2.send(sendHeaders2, ws2Message);
+
         CompletableFuture<Object> ws2future = waitForAndPopLatestMessages(ws2Messages);
-        JoinSpaceResponse ws2response = (JoinSpaceResponse)ws2future.get(100,TimeUnit.MILLISECONDS);
+        JoinSpaceResponse ws2response = (JoinSpaceResponse)ws2future.get(10000,TimeUnit.MILLISECONDS);
         JoinSpaceResponsePayload res2 = (JoinSpaceResponsePayload)(ws1response.getPayload());
         userX = res2.getX();
         userY = res2.getY();

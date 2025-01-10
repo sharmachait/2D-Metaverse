@@ -1,8 +1,8 @@
 package com.sharmachait.ws.models.dto;
 
-import com.sharmachait.ws.models.entity.Avatar;
 import com.sharmachait.ws.models.entity.Role;
 import com.sharmachait.ws.models.entity.Status;
+import com.sharmachait.ws.models.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,10 +17,10 @@ import java.util.Objects;
 public class UserDto {
 
     private String id;
-    private String avatarId;
-    private Role role;
     private String username;
     private Status status;
+    private Role role;
+    private String spaceId;
 
     @Override
     public int hashCode() {
@@ -30,5 +30,11 @@ public class UserDto {
     public String toString() {
         return id;
     }
-
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UserDto)) return false;
+        UserDto user = (UserDto) o;
+        return Objects.equals(id, user.id);
+    }
 }

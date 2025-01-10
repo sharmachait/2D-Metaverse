@@ -1,8 +1,12 @@
 package com.sharmachait.ws.config;
 
+import com.sharmachait.ws.models.entity.Status;
+import com.sharmachait.ws.models.entity.User;
 import com.sharmachait.ws.models.messages.MessageType;
 import com.sharmachait.ws.models.messages.responseMessages.leaveSpace.LeaveSpaceResponse;
 import com.sharmachait.ws.models.messages.responseMessages.leaveSpace.LeaveSpaceResponsePayload;
+import com.sharmachait.ws.repository.UserRespository;
+import com.sharmachait.ws.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +23,8 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 public class WebSocketEventListener {
 
     private final SimpMessageSendingOperations messagingTemplate;
+    private final UserRespository userRespository;
+    private final UserService userService;
 
     @EventListener
     public void handleWebSocketDisconnect(SessionDisconnectEvent event) {
@@ -37,19 +43,24 @@ public class WebSocketEventListener {
                 return;
             }
 
-            String userId = parts[0];
+            String email = parts[0];
             String spaceId = parts[1];
+
+
+            User user = userService.Disconnect(email, spaceId);
 
             LeaveSpaceResponse response = LeaveSpaceResponse.builder()
                     .type(MessageType.USER_LEFT)
                     .payload(LeaveSpaceResponsePayload.builder()
                             .spaceId(spaceId)
-                            .userId(userId)
+                            .email(email)
+                            .userId(user.getId())
                             .build())
                     .build();
 
             messagingTemplate.convertAndSend("/topic/space/" + spaceId, response);
-            log.debug("User {} left space {}", userId, spaceId);
+
+            log.debug("User {} left space {}", user.getId(), spaceId);
         } catch (Exception e) {
             log.error("Error handling WebSocket disconnect event", e);
         }

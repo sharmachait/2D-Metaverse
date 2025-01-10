@@ -14,14 +14,16 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
 @Data
 public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     private String username;
-    private String password;
     private Status status;
-    private Avatar avatar;
     private Role role;
+    private String spaceId;
 
     @Override
     public int hashCode() {
@@ -31,5 +33,13 @@ public class User {
     @Override
     public String toString() {
         return id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+        User user = (User) o;
+        return Objects.equals(id, user.id);
     }
 }

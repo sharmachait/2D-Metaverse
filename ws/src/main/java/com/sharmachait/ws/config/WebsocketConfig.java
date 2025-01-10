@@ -161,6 +161,7 @@ public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
                     }
                     Object payloadObj = message.getPayload();
                     String token = getTokenFromMessage(payloadObj);
+                    String destination = accessor.getDestination();
 
                     if(!validateToken(token)){
                         throw new RuntimeException("Invalid token");
