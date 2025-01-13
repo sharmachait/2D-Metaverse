@@ -27,6 +27,9 @@ A real-time virtual space platform built with Spring Boot, WebSocket, and WebRTC
 - **Role-Based Access:** Different permissions for admins and regular users
 - **Secure WebSocket:** Protected WebSocket connections for real-time updates
 
+### Liveness Probes
+- **Realtime gamestate updates:** When a new user joins the liveness probe is used to ping all the online players and the state of the game space
+
 ## Technology Stack
 
 ### Backend
