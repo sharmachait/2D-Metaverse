@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sharmachait.ws.models.dto.*;
 import com.sharmachait.ws.models.entity.Role;
-
 import com.sharmachait.ws.models.messages.requestMessages.joinSpace.JoinSpaceRequest;
 import com.sharmachait.ws.models.messages.MessageType;
 import com.sharmachait.ws.models.messages.requestMessages.joinSpace.JoinSpaceRequestPayload;
@@ -17,6 +16,7 @@ import com.sharmachait.ws.models.messages.responseMessages.movement.MovementResp
 import com.sharmachait.ws.models.messages.responseMessages.movement.MovementResponsePayload;
 import com.sharmachait.ws.models.response.AuthResponse;
 import jakarta.annotation.Nullable;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,12 +34,14 @@ import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.Transport;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Slf4j
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -194,7 +196,7 @@ class SpaceControllerTest {
             @Override
             @NonNull
             public Type getPayloadType(@Nullable StompHeaders headers) {
-                return String.class; // Assume the payload is a JSON string
+                return byte[].class; // Assume the payload is a JSON string
             }
 
             @Override
@@ -212,7 +214,7 @@ class SpaceControllerTest {
             @Override
             @NonNull
             public Type getPayloadType(@Nullable StompHeaders headers) {
-                return String.class; // Assume the payload is a JSON string
+                return byte[].class; // Assume the payload is a JSON string
             }
 
             @Override
@@ -229,8 +231,17 @@ class SpaceControllerTest {
     }
 
     private static Object parseMessage(Object payload){
-        String jsonPayload = (String) payload;
+
         try{
+            String jsonPayload;
+            if (payload instanceof byte[]) {
+                jsonPayload = new String((byte[]) payload, StandardCharsets.UTF_8);
+            } else if (payload instanceof String) {
+                jsonPayload = (String) payload;
+            } else {
+                log.error("Unexpected payload type: {}", payload.getClass());
+                return null;
+            }
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(jsonPayload);
             String typeString = jsonNode.get("type").asText();
@@ -247,7 +258,8 @@ class SpaceControllerTest {
                 case CHAT -> objectMapper.readValue(jsonPayload, ChatMessageEntityDto.class);
             };
         } catch (Exception e) {
-            return null;
+
+            return e;
         }
     }
 
@@ -287,6 +299,13 @@ class SpaceControllerTest {
         });
     }
 
+    @AfterAll
+    static void tearDown() {
+        if (ws1 != null) ws1.disconnect();
+        if (ws2 != null) ws2.disconnect();
+        // Clean up created test data from database
+    }
+
     @Order(1)
     @Test
     void getAckOnJoiningSpaceAndBroadCast() throws ExecutionException, InterruptedException, TimeoutException {
@@ -311,39 +330,41 @@ class SpaceControllerTest {
         StompHeaders sendHeaders1 = new StompHeaders();
         sendHeaders1.setDestination("/app/space");
         ws1.send(sendHeaders1,ws1Message);
-
+        Thread.sleep(1000);
         CompletableFuture<Object> ws1future = waitForAndPopLatestMessages(ws1Messages);
         JoinSpaceResponse ws1response = (JoinSpaceResponse)ws1future.get(10000,TimeUnit.MILLISECONDS);
         JoinSpaceResponsePayload res1 = (JoinSpaceResponsePayload)(ws1response.getPayload());
+        assertEquals(MessageType.SPACE_JOINED, ws1response.getType());
+        assertEquals(0, res1.getUsers().size());
+        CompletableFuture<Object> ws2future = waitForAndPopLatestMessages(ws2Messages);
+        JoinSpaceResponse ws2response = (JoinSpaceResponse)ws2future.get(10000,TimeUnit.MILLISECONDS);
+        JoinSpaceResponsePayload res2 = (JoinSpaceResponsePayload)(ws2response.getPayload());
+        assertEquals(MessageType.SPACE_JOINED, ws2response.getType());
+        assertEquals(0, res2.getUsers().size());
+
         adminX = res1.getX();
         adminY = res1.getY();
 
         StompHeaders sendHeaders2 = new StompHeaders();
         sendHeaders2.setDestination("/app/space");
         ws2.send(sendHeaders2, ws2Message);
+        Thread.sleep(1000);
+        ws2future = waitForAndPopLatestMessages(ws2Messages);
+        ws2response = (JoinSpaceResponse)ws2future.get(10000,TimeUnit.MILLISECONDS);
+        res2 = (JoinSpaceResponsePayload)(ws2response.getPayload());
+        assertEquals(MessageType.SPACE_JOINED, ws2response.getType());
+        assertEquals(1, res2.getUsers().size());
+        ws1future = waitForAndPopLatestMessages(ws1Messages);
+        ws1response = (JoinSpaceResponse)ws1future.get(10000,TimeUnit.MILLISECONDS);
+        res1 = (JoinSpaceResponsePayload)(ws1response.getPayload());
+        assertEquals(MessageType.SPACE_JOINED, ws1response.getType());
+        assertEquals(1, res1.getUsers().size());
 
-        CompletableFuture<Object> ws2future = waitForAndPopLatestMessages(ws2Messages);
-        JoinSpaceResponse ws2response = (JoinSpaceResponse)ws2future.get(10000,TimeUnit.MILLISECONDS);
-        JoinSpaceResponsePayload res2 = (JoinSpaceResponsePayload)(ws1response.getPayload());
         userX = res2.getX();
         userY = res2.getY();
 
-        assertEquals(MessageType.SPACE_JOINED, ws1response.getType());
-        assertEquals(MessageType.SPACE_JOINED, ws2response.getType());
-        assertEquals(0, res1.getUsers().size());
-        assertEquals(1, res1.getUsers().size());
         assertEquals(adminX, res2.getUsers().get(0).getX());
         assertEquals(adminY, res2.getUsers().get(0).getY());
-
-        CompletableFuture<Object> joinBroadcast = waitForAndPopLatestMessages(ws1Messages);
-        JoinSpaceResponse joinResponse = (JoinSpaceResponse)joinBroadcast.get(100,TimeUnit.MILLISECONDS);
-        JoinSpaceResponsePayload res3 = (JoinSpaceResponsePayload)(joinResponse.getPayload());
-
-        assertEquals(MessageType.SPACE_JOINED_BROADCAST, joinResponse.getType());
-        assertEquals(1, res3.getUsers().size());
-        assertEquals(userId, res3.getUsers().get(0).getUserId());
-        assertEquals(userX, res3.getUsers().get(0).getX());
-        assertEquals(userY, res3.getUsers().get(0).getY());
     }
 
     @Order(2)

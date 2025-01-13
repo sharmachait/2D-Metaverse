@@ -1,6 +1,7 @@
 package com.sharmachait.ws.controller;
 
 import com.sharmachait.ws.config.jwt.JwtProvider;
+import com.sharmachait.ws.models.dto.UserDto;
 import com.sharmachait.ws.models.entity.Role;
 import com.sharmachait.ws.models.entity.Status;
 import com.sharmachait.ws.models.entity.User;
@@ -10,6 +11,7 @@ import com.sharmachait.ws.models.messages.responseMessages.joinedSpace.JoinSpace
 import com.sharmachait.ws.models.messages.responseMessages.joinedSpace.JoinSpaceResponsePayload;
 import com.sharmachait.ws.models.messages.responseMessages.joinedSpace.UserSpawn;
 import com.sharmachait.ws.repository.UserRespository;
+import com.sharmachait.ws.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -18,6 +20,7 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -27,6 +30,8 @@ public class SpaceController {
     SimpMessageSendingOperations messagingTemplate;
     @Autowired
     private UserRespository userRespository;
+    @Autowired
+    private UserService userService;
 
     @MessageMapping("/space")
     public void joinSpace(@Payload JoinSpaceRequest request,
@@ -54,11 +59,23 @@ public class SpaceController {
                 .username(userEmail)
                 .build();
 
+
+        List<UserSpawn> l =new ArrayList<>();
+        List<UserDto> users = userService.findAllBySpaceIdAndStatus(spaceId,Status.ONLINE.toString());
         user = userRespository.save(user);
         request.getPayload().setUserId(user.getId());
+        for(UserDto u : users){
+            l.add(UserSpawn.builder()
+                            .username(u.getUsername())
+                            .x(0)
+                            .y(0)
+                    .build());
+        }
         JoinSpaceResponse response = JoinSpaceResponse.builder()
                 .type(MessageType.SPACE_JOINED)
                 .payload(JoinSpaceResponsePayload.builder()
+
+                        .users(l)
                         .spaceId(request.getPayload().getSpaceId())
                         .userId(request.getPayload().getUserId())
                         .build())
