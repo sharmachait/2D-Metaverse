@@ -247,13 +247,13 @@ class SpaceControllerTest {
             String typeString = jsonNode.get("type").asText();
             MessageType type = MessageType.valueOf(typeString);
             return switch (type) {
-                case SPACE_JOINED, SPACE_JOINED_BROADCAST, BAD_REQUEST
+                case SPACE_JOINED, BAD_REQUEST
                         -> objectMapper.readValue(jsonPayload, JoinSpaceResponse.class);
                 case JOIN
                         -> objectMapper.readValue(jsonPayload, JoinSpaceRequest.class);
                 case MOVE, MOVE_REJECTED
                         -> objectMapper.readValue(jsonPayload, MovementResponse.class);
-                case USER_LEFT
+                case USER_LEFT, LEAVE
                         -> objectMapper.readValue(jsonPayload, LeaveSpaceResponse.class);
                 case CHAT -> objectMapper.readValue(jsonPayload, ChatMessageEntityDto.class);
             };

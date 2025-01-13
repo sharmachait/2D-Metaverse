@@ -7,6 +7,6 @@ public enum MessageType {
     MOVE,
     MOVE_REJECTED,
     USER_LEFT,
-    SPACE_JOINED_BROADCAST,
+    LEAVE,
     CHAT
 }
