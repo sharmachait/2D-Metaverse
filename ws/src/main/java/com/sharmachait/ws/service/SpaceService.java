@@ -16,6 +16,8 @@ import com.sharmachait.ws.models.messages.requestMessages.movement.MovementReque
 import com.sharmachait.ws.models.messages.responseMessages.joinedSpace.JoinSpaceResponse;
 import com.sharmachait.ws.models.messages.responseMessages.joinedSpace.JoinSpaceResponsePayload;
 import com.sharmachait.ws.models.messages.responseMessages.joinedSpace.UserSpawn;
+import com.sharmachait.ws.models.messages.responseMessages.leaveSpace.LeaveSpaceResponse;
+import com.sharmachait.ws.models.messages.responseMessages.leaveSpace.LeaveSpaceResponsePayload;
 import com.sharmachait.ws.models.messages.responseMessages.movement.MovementResponse;
 import com.sharmachait.ws.models.messages.responseMessages.movement.MovementResponsePayload;
 import com.sharmachait.ws.repository.UserRespository;
@@ -191,7 +193,30 @@ public class SpaceService {
         Space space = getSpaceBySpaceId(spaceId);
         int x = request.getPayload().getX();
         int y = request.getPayload().getY();
-        if(x<0 || x>space.getWidth() || y<0 || y>space.getHeight()){
+        if(!isObject(spaceId, x, y)){
+            if(x<0 || x>space.getWidth() || y<0 || y>space.getHeight()){
+                MovementResponse res = MovementResponse.builder()
+                        .type(MessageType.MOVE_REJECTED)
+                        .payload(MovementResponsePayload.builder()
+                                .spaceId(request.getPayload().getSpaceId())
+                                .x(request.getPayload().getX())
+                                .y(request.getPayload().getY())
+                                .userId(request.getPayload().getUserId())
+                                .build())
+                        .build();
+                messagingTemplate.convertAndSend("/topic/space", res);
+            }
+            MovementResponse res = MovementResponse.builder()
+                    .type(MessageType.MOVE)
+                    .payload(MovementResponsePayload.builder()
+                            .spaceId(request.getPayload().getSpaceId())
+                            .x(request.getPayload().getX())
+                            .y(request.getPayload().getY())
+                            .userId(request.getPayload().getUserId())
+                            .build())
+                    .build();
+            messagingTemplate.convertAndSend("/topic/space", res);
+        }else{
             MovementResponse res = MovementResponse.builder()
                     .type(MessageType.MOVE_REJECTED)
                     .payload(MovementResponsePayload.builder()
@@ -203,21 +228,39 @@ public class SpaceService {
                     .build();
             messagingTemplate.convertAndSend("/topic/space", res);
         }
-        MovementResponse res = MovementResponse.builder()
-                .type(MessageType.MOVE)
-                .payload(MovementResponsePayload.builder()
-                        .spaceId(request.getPayload().getSpaceId())
-                        .x(request.getPayload().getX())
-                        .y(request.getPayload().getY())
-                        .userId(request.getPayload().getUserId())
-                        .build())
-                .build();
-        messagingTemplate.convertAndSend("/topic/space", res);
+
     }
+
+    private boolean isObject(String spaceId, int x, int y) throws Exception {
+        List<SpaceElementDto> l = getSpaceElementBySpaceId(spaceId);
+        Set<List<Integer>> taken = new HashSet<>();
+        for(SpaceElementDto dto : l){
+            if(dto.isStatic()){
+                List<Integer> ordinates=List.of(dto.getX(), dto.getY());
+                taken.add(ordinates);
+            }
+        }
+        if(taken.isEmpty()){
+            return false;
+        }
+        return taken.contains(List.of(x, y));
+    }
+
     public void leave(JoinSpaceRequest request, SimpMessageHeaderAccessor headerAccessor) throws Exception {
         String token = request.getPayload().getToken();
         String userEmail = JwtProvider.getEmailFromToken(token);
         String spaceId = request.getPayload().getSpaceId();
+        User user = userService.Disconnect(userEmail, spaceId);
 
+        LeaveSpaceResponse response = LeaveSpaceResponse.builder()
+                .type(MessageType.USER_LEFT)
+                .payload(LeaveSpaceResponsePayload.builder()
+                        .spaceId(spaceId)
+                        .email(userEmail)
+                        .userId(user.getId())
+                        .build())
+                .build();
+
+        messagingTemplate.convertAndSend("/topic/space/" + spaceId, response);
     }
 }
