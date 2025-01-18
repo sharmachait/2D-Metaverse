@@ -8,5 +8,7 @@ public enum MessageType {
     MOVE_REJECTED,
     USER_LEFT,
     LEAVE,
-    CHAT
+    CHAT,
+    PING,
+    PONG
 }
