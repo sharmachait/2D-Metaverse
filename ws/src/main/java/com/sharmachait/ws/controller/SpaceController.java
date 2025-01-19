@@ -20,8 +20,7 @@ public class SpaceController {
 
 
     @MessageMapping("/space")
-    public void joinSpace(@Payload JoinSpaceRequest request,
-                                       SimpMessageHeaderAccessor headerAccessor) throws Exception {
+    public void joinSpace(@Payload JoinSpaceRequest request, SimpMessageHeaderAccessor headerAccessor) throws Exception {
 
         if(request.getType().equals(MessageType.LEAVE)){
             spaceService.leave(request, headerAccessor);

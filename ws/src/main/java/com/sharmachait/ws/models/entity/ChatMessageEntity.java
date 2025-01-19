@@ -31,6 +31,10 @@ public class ChatMessageEntity {
     public int hashCode() {
         return Objects.hash(id); // only use the ID, not any collections
     }
+    @Override
+    public boolean equals(Object o) {
+        return Objects.equals(this, o);
+    }
 
     @Override
     public String toString() {
