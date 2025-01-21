@@ -11,12 +11,18 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 public interface SpaceService {
-    SpaceDto findById(String id) throws NoSuchElementException;
-//    Space save(String authHeader, SpaceDto spaceDto);
-    SpaceDto save(String owner, String gameMap, SpaceDto spaceDto) throws Exception;
-    void deleteById(String authHeader, String spaceId) throws Exception;
-    SpaceDto save(Space space);
-    SpaceDto addElement(String authHeader, SpaceElementDto spaceElementDto, String spaceId) throws Exception;
-    List<SpaceDto> findByUserId(String authHeader) throws Exception;
-    SpaceDto deleteElement(String authHeader,  String elementId) throws Exception;
+  SpaceDto findById(String id) throws NoSuchElementException;
+
+  // Space save(String authHeader, SpaceDto spaceDto);
+  SpaceDto save(String owner, String gameMap, SpaceDto spaceDto) throws Exception;
+
+  void deleteById(String authHeader, String spaceId) throws Exception;
+
+  SpaceDto save(Space space);
+
+  SpaceDto addElement(String authHeader, SpaceElementDto spaceElementDto, String spaceId) throws Exception;
+
+  List<SpaceDto> findByUserId(String authHeader) throws Exception;
+
+  SpaceDto deleteElement(String authHeader, String elementId) throws Exception;
 }

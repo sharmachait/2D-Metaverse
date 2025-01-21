@@ -14,33 +14,33 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 @Service
 public class ChatMessageService {
-    @Autowired
-    private final ChatMessageRepository chatMessageRepository;
-    @Autowired
-    private final ChatRoomService chatRoomService;
+  @Autowired
+  private final ChatMessageRepository chatMessageRepository;
+  @Autowired
+  private final ChatRoomService chatRoomService;
 
-    public ChatMessageEntity save(ChatMessageEntity chatMessageEntity) throws Exception {
-        try{
-            ChatRoom chatRoom = chatRoomService.getChatRoom(chatMessageEntity.getSender(), chatMessageEntity.getRecipient(),true);
-            chatMessageEntity.setChatRoom(chatRoom);
-            chatMessageEntity.setChatId(chatRoom.getChatId());
-            return chatMessageRepository.save(chatMessageEntity);
-        } catch (Exception e) {
-            throw new Exception(e);
-        }
+  public ChatMessageEntity save(ChatMessageEntity chatMessageEntity) throws Exception {
+    try {
+      ChatRoom chatRoom = chatRoomService.getChatRoom(chatMessageEntity.getSender(), chatMessageEntity.getRecipient(),
+          true);
+      chatMessageEntity.setChatRoom(chatRoom);
+      chatMessageEntity.setChatId(chatRoom.getChatId());
+      return chatMessageRepository.save(chatMessageEntity);
+    } catch (Exception e) {
+      throw new Exception(e);
     }
+  }
 
-    public List<ChatMessageEntity> getChatMessages(String senderId, String recipientId) throws NoSuchElementException {
-        try{
-            ChatRoom chatRoom = chatRoomService.getChatRoom(senderId,recipientId,false);
-            List<ChatMessageEntity> chatMessageEntities = chatMessageRepository.findByChatRoom_Id(chatRoom.getId());
-            if(chatMessageEntities ==null){
-                chatMessageEntities = new ArrayList<>();
-            }
-            return chatMessageEntities;
-        }
-        catch (NoSuchElementException e) {
-            throw new RuntimeException(e);
-        }
+  public List<ChatMessageEntity> getChatMessages(String senderId, String recipientId) throws NoSuchElementException {
+    try {
+      ChatRoom chatRoom = chatRoomService.getChatRoom(senderId, recipientId, false);
+      List<ChatMessageEntity> chatMessageEntities = chatMessageRepository.findByChatRoom_Id(chatRoom.getId());
+      if (chatMessageEntities == null) {
+        chatMessageEntities = new ArrayList<>();
+      }
+      return chatMessageEntities;
+    } catch (NoSuchElementException e) {
+      throw new RuntimeException(e);
     }
+  }
 }

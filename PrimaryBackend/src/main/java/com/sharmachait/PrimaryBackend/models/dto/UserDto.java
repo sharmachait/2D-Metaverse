@@ -14,18 +14,19 @@ import java.util.Set;
 @NoArgsConstructor
 @Builder
 public class UserDto {
-    private String id;
-    private String avatarId;
-    private Role role;
-    private String username;
-    private Set<SpaceDto> spaces;
-    @Override
-    public int hashCode() {
-        return Objects.hash(id); // only use the ID, not any collections
-    }
+  private String id;
+  private String avatarId;
+  private Role role;
+  private String username;
+  private Set<SpaceDto> spaces;
 
-    @Override
-    public String toString() {
-        return id;
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(id); // only use the ID, not any collections
+  }
+
+  @Override
+  public String toString() {
+    return id;
+  }
 }

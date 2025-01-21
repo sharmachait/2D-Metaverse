@@ -15,83 +15,51 @@ import java.util.List;
 @RequestMapping("/api/v1/user")
 @RequiredArgsConstructor
 public class UserController {
-    private final UserService userService;
-    @GetMapping("/metadata")
-    public ResponseEntity<UserDto> metadata(
-            @RequestHeader("Authorization") String authorizationHeader
-    ) {
-        try{
-            String userId = JwtProvider.getIdFromToken(authorizationHeader);
-            UserDto user = userService.findById(userId);
-            return ResponseEntity.ok(user);
-        }catch (Exception e){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+  private final UserService userService;
+
+  @GetMapping("/metadata")
+  public ResponseEntity<UserDto> metadata(
+      @RequestHeader("Authorization") String authorizationHeader) {
+    try {
+      String userId = JwtProvider.getIdFromToken(authorizationHeader);
+      UserDto user = userService.findById(userId);
+      return ResponseEntity.ok(user);
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+  }
+
+  @PostMapping("/metadata")
+  public ResponseEntity<UserDto> postMetadata(
+      @RequestHeader("Authorization") String authorizationHeader,
+      @RequestBody UserDto userDto) throws Exception {
+    try {
+      String userId = JwtProvider.getIdFromToken(authorizationHeader);
+      return ResponseEntity.ok(userService.update(userDto, userId));
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
-    @PostMapping("/metadata")
-    public ResponseEntity<UserDto> postMetadata(
-            @RequestHeader("Authorization") String authorizationHeader,
-            @RequestBody UserDto userDto) throws Exception {
-        try{
-            String userId = JwtProvider.getIdFromToken(authorizationHeader);
-            return ResponseEntity.ok(userService.update(userDto, userId));
-        }
-        catch (Exception e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+  }
 
-    }
-    @GetMapping("/metadata/bulk")
-    public ResponseEntity<?> bulkMetadata(@RequestParam("ids") String userIdsParam){
-        String cleanUserIds = userIdsParam.replaceAll("\\[|\\]", "").trim();
-        String[] userIds = cleanUserIds.split(",");
+  @GetMapping("/metadata/bulk")
+  public ResponseEntity<?> bulkMetadata(@RequestParam("ids") String userIdsParam) {
+    String cleanUserIds = userIdsParam.replaceAll("\\[|\\]", "").trim();
+    String[] userIds = cleanUserIds.split(",");
 
-        try{
-            List<UserDto> users = new ArrayList<>();
-            for(String id:userIds){
-                UserDto user = userService.findById(id);
-                UserDto userDto = UserDto.builder()
-                        .role(user.getRole())
-                        .avatarId(user.getAvatarId())
-                        .build();
-                users.add(userDto);
-            }
-            return ResponseEntity.ok(users);
-        }
-        catch(Exception e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e);
-        }
+    try {
+      List<UserDto> users = new ArrayList<>();
+      for (String id : userIds) {
+        UserDto user = userService.findById(id);
+        UserDto userDto = UserDto.builder()
+            .role(user.getRole())
+            .avatarId(user.getAvatarId())
+            .build();
+        users.add(userDto);
+      }
+      return ResponseEntity.ok(users);
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e);
     }
+  }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

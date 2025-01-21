@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserSpawn {
-    private String username;
-    private int x;
-    private int y;
+  private String username;
+  private int x;
+  private int y;
 }

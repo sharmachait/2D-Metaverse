@@ -8,6 +8,6 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Ping {
-    private MessageType type;
-    private PingPayload payload;
+  private MessageType type;
+  private PingPayload payload;
 }

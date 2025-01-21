@@ -13,28 +13,24 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Avatar {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private String id;
 
-    private String imageUrl;
-    private String name;
+  private String imageUrl;
+  private String name;
 
-    @OneToMany(
-            mappedBy = "avatar",
-            fetch = FetchType.EAGER,
-            cascade = CascadeType.PERSIST
-    )
-    @JsonManagedReference
-    private Set<User> users;
+  @OneToMany(mappedBy = "avatar", fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
+  @JsonManagedReference
+  private Set<User> users;
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id); // only use the ID, not any collections
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(id); // only use the ID, not any collections
+  }
 
-    @Override
-    public String toString() {
-        return id;
-    }
+  @Override
+  public String toString() {
+    return id;
+  }
 }

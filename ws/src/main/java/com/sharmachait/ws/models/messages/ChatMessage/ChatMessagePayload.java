@@ -8,6 +8,6 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChatMessagePayload {
-    private String token;
-    private String message;
+  private String token;
+  private String message;
 }

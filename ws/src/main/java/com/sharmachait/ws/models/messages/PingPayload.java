@@ -8,10 +8,10 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PingPayload {
-    private String token;
-    private String spaceId;
-    private String userFor;
-    private String userFrom;
-    private int fromX;
-    private int fromY;
+  private String token;
+  private String spaceId;
+  private String userFor;
+  private String userFrom;
+  private int fromX;
+  private int fromY;
 }

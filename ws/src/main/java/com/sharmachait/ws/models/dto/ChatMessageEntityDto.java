@@ -15,19 +15,20 @@ import java.util.Objects;
 @Builder
 @NoArgsConstructor
 public class ChatMessageEntityDto {
-    private String id;
-    private String sender;
-    private String recipient;
-    private String content;
-    private String chatId;
-    private Date date;
-    @Override
-    public int hashCode() {
-        return Objects.hash(id); // only use the ID, not any collections
-    }
+  private String id;
+  private String sender;
+  private String recipient;
+  private String content;
+  private String chatId;
+  private Date date;
 
-    @Override
-    public String toString() {
-        return id;
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(id); // only use the ID, not any collections
+  }
+
+  @Override
+  public String toString() {
+    return id;
+  }
 }

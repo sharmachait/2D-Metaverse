@@ -12,16 +12,17 @@ import java.util.Objects;
 @Builder
 @NoArgsConstructor
 public class AvatarDto {
-    private String id;
-    private String imageUrl;
-    private String name;
-    @Override
-    public int hashCode() {
-        return Objects.hash(id); // only use the ID, not any collections
-    }
+  private String id;
+  private String imageUrl;
+  private String name;
 
-    @Override
-    public String toString() {
-        return id;
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(id); // only use the ID, not any collections
+  }
+
+  @Override
+  public String toString() {
+    return id;
+  }
 }

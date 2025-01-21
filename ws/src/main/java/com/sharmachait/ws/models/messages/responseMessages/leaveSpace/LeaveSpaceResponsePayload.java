@@ -7,9 +7,9 @@ import lombok.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class LeaveSpaceResponsePayload{
-    private String token;
-    private String userId;
-    private String email;
-    private String spaceId;
+public class LeaveSpaceResponsePayload {
+  private String token;
+  private String userId;
+  private String email;
+  private String spaceId;
 }

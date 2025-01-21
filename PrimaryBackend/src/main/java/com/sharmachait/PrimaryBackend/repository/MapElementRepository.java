@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface MapElementRepository extends JpaRepository<MapElement, String> {
-    List<MapElement> findByGameMapId(String gameMapId);
+  List<MapElement> findByGameMapId(String gameMapId);
 }

@@ -11,16 +11,17 @@ import java.util.Objects;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LoginDto {
-    private String username;
-    private String password;
-    private Role role;
-    @Override
-    public int hashCode() {
-        return Objects.hash(username+password+role.toString()); // only use the ID, not any collections
-    }
+  private String username;
+  private String password;
+  private Role role;
 
-    @Override
-    public String toString() {
-        return username+password+role.toString();
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(username + password + role.toString()); // only use the ID, not any collections
+  }
+
+  @Override
+  public String toString() {
+    return username + password + role.toString();
+  }
 }

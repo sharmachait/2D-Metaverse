@@ -10,12 +10,12 @@ import java.util.List;
 @Builder
 
 public class Space {
-    private String id;
-    private String name;
-    private int width;
-    private int height;
-    private String thumbnail;
-    private String ownerId;
-    private String gameMapId;
-    List<String> spaceElementIds;
+  private String id;
+  private String name;
+  private int width;
+  private int height;
+  private String thumbnail;
+  private String ownerId;
+  private String gameMapId;
+  List<String> spaceElementIds;
 }

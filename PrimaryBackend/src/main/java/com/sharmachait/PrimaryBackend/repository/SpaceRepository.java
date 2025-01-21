@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface SpaceRepository extends JpaRepository<Space, String> {
-    List<Space> findByOwner(User owner);
+  List<Space> findByOwner(User owner);
 }

@@ -15,29 +15,30 @@ import java.util.Objects;
 @Builder
 @NoArgsConstructor
 public class ChatMessageEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
-    private String sender;
-    private String recipient;
-    private String content;
-    private String chatId;
-    private Date date;
-    @ManyToOne
-    @JoinColumn(name = "chat_room_id", nullable = false) // Foreign key column
-    private ChatRoom chatRoom;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private String id;
+  private String sender;
+  private String recipient;
+  private String content;
+  private String chatId;
+  private Date date;
+  @ManyToOne
+  @JoinColumn(name = "chat_room_id", nullable = false) // Foreign key column
+  private ChatRoom chatRoom;
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id); // only use the ID, not any collections
-    }
-    @Override
-    public boolean equals(Object o) {
-        return Objects.equals(this, o);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(id); // only use the ID, not any collections
+  }
 
-    @Override
-    public String toString() {
-        return id;
-    }
+  @Override
+  public boolean equals(Object o) {
+    return Objects.equals(this, o);
+  }
+
+  @Override
+  public String toString() {
+    return id;
+  }
 }

@@ -15,37 +15,30 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GameMap {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
-    private int width;
-    private int height;
-    private String name;
-    @OneToMany(
-            mappedBy = "gameMap",
-            cascade = CascadeType.ALL
-    )
-    @JsonManagedReference
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private Set<MapElement> mapElements = new HashSet<>();
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private String id;
+  private int width;
+  private int height;
+  private String name;
+  @OneToMany(mappedBy = "gameMap", cascade = CascadeType.ALL)
+  @JsonManagedReference
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+  private Set<MapElement> mapElements = new HashSet<>();
 
-    private String thumbnail;
-    @OneToMany(
-            mappedBy = "gameMap",
-            fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL
-    )
-    @JsonManagedReference
-    private Set<Space> spaces= new HashSet<>();
+  private String thumbnail;
+  @OneToMany(mappedBy = "gameMap", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+  @JsonManagedReference
+  private Set<Space> spaces = new HashSet<>();
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id); // only use the ID, not any collections
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(id); // only use the ID, not any collections
+  }
 
-    @Override
-    public String toString() {
-        return id;
-    }
+  @Override
+  public String toString() {
+    return id;
+  }
 
 }

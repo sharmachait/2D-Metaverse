@@ -17,18 +17,18 @@ import java.util.List;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
-    @Autowired
-    private UserRepository userRepository;
+  @Autowired
+  private UserRepository userRepository;
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        com.sharmachait.PrimaryBackend.models.entity.User user = userRepository.findByUsername(username);
-        if(user == null)
-            throw new UsernameNotFoundException(username);
+  @Override
+  public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    com.sharmachait.PrimaryBackend.models.entity.User user = userRepository.findByUsername(username);
+    if (user == null)
+      throw new UsernameNotFoundException(username);
 
-        List<GrantedAuthority> authorities = new ArrayList<>();
-        Role role = user.getRole();
-        authorities.add(new SimpleGrantedAuthority(role.toString()));
-        return new User(user.getUsername(), user.getPassword(),authorities);
-    }
+    List<GrantedAuthority> authorities = new ArrayList<>();
+    Role role = user.getRole();
+    authorities.add(new SimpleGrantedAuthority(role.toString()));
+    return new User(user.getUsername(), user.getPassword(), authorities);
+  }
 }

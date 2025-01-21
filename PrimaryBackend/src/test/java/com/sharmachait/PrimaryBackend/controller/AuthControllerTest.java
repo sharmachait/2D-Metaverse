@@ -17,148 +17,148 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AuthControllerTest {
-    @LocalServerPort
-    private int serverPort;
+  @LocalServerPort
+  private int serverPort;
 
-    LoginDto loginDto;
+  LoginDto loginDto;
 
-    @BeforeEach
-    void setUp() {
-        loginDto = new LoginDto();
-        loginDto.setUsername("authcontroller");
-        loginDto.setPassword("password");
-        loginDto.setRole(Role.ROLE_USER);
-    }
+  @BeforeEach
+  void setUp() {
+    loginDto = new LoginDto();
+    loginDto.setUsername("authcontroller");
+    loginDto.setPassword("password");
+    loginDto.setRole(Role.ROLE_USER);
+  }
 
-    @Order(1)
-    @Test
-    @DisplayName("User can be created only once")
-    void register() {
-        //arrange
-        WebClient webClient = WebClient.create();
-        //act
-        ClientResponse clientResponse = webClient.post()
-                .uri("http://localhost:" + serverPort + "/auth/signup")
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(loginDto)
-                .exchange()
-                .block(); // Block to get the ClientResponse synchronously
-        //assert
-        assertNotNull(clientResponse, "Response object should not be null");
-        assertEquals(HttpStatus.CREATED, clientResponse.statusCode() , "Status code should be 201 CREATED");
+  @Order(1)
+  @Test
+  @DisplayName("User can be created only once")
+  void register() {
+    // arrange
+    WebClient webClient = WebClient.create();
+    // act
+    ClientResponse clientResponse = webClient.post()
+        .uri("http://localhost:" + serverPort + "/auth/signup")
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(loginDto)
+        .exchange()
+        .block(); // Block to get the ClientResponse synchronously
+    // assert
+    assertNotNull(clientResponse, "Response object should not be null");
+    assertEquals(HttpStatus.CREATED, clientResponse.statusCode(), "Status code should be 201 CREATED");
 
-        // Extract and assert the response body
-        AuthResponse response = clientResponse.bodyToMono(AuthResponse.class).block();
-        assertNotNull(response, "Response object should not be null");
-        assertNotNull(response.getJwt(), "JWT token should not be null");
-        assertEquals(response.getStatus(), true, "Status should be true");
-        assertEquals(response.getMessage(), "User registered successfully", "Message should match");
-    }
+    // Extract and assert the response body
+    AuthResponse response = clientResponse.bodyToMono(AuthResponse.class).block();
+    assertNotNull(response, "Response object should not be null");
+    assertNotNull(response.getJwt(), "JWT token should not be null");
+    assertEquals(response.getStatus(), true, "Status should be true");
+    assertEquals(response.getMessage(), "User registered successfully", "Message should match");
+  }
 
-    @Order(2)
-    @Test
-    @DisplayName("User can not be created again")
-    void registerDuplicate() {
-        //arrange
-        WebClient webClient = WebClient.create();
-        //act
-        ClientResponse clientResponse = webClient.post()
-                .uri("http://localhost:" + serverPort + "/auth/signup")
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(loginDto)
-                .exchange()
-                .block(); // Block to get the ClientResponse synchronously
-        //assert
-        assertNotNull(clientResponse, "Response object should not be null");
-        assertEquals(clientResponse.statusCode(), HttpStatus.CONFLICT, "Status code should be CONFLICT");
+  @Order(2)
+  @Test
+  @DisplayName("User can not be created again")
+  void registerDuplicate() {
+    // arrange
+    WebClient webClient = WebClient.create();
+    // act
+    ClientResponse clientResponse = webClient.post()
+        .uri("http://localhost:" + serverPort + "/auth/signup")
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(loginDto)
+        .exchange()
+        .block(); // Block to get the ClientResponse synchronously
+    // assert
+    assertNotNull(clientResponse, "Response object should not be null");
+    assertEquals(clientResponse.statusCode(), HttpStatus.CONFLICT, "Status code should be CONFLICT");
 
-        // Extract and assert the response body
-        AuthResponse response = clientResponse.bodyToMono(AuthResponse.class).block();
-        assertNotNull(response, "Response object should not be null");
-        assertNull(response.getJwt(), "JWT token should be null");
-        assertEquals(response.getStatus(), false, "Status should be false");
-        assertEquals("Username already exists", response.getMessage(), "Message should match");
-    }
+    // Extract and assert the response body
+    AuthResponse response = clientResponse.bodyToMono(AuthResponse.class).block();
+    assertNotNull(response, "Response object should not be null");
+    assertNull(response.getJwt(), "JWT token should be null");
+    assertEquals(response.getStatus(), false, "Status should be false");
+    assertEquals("Username already exists", response.getMessage(), "Message should match");
+  }
 
-    @Order(3)
-    @Test
-    @DisplayName("User can not be created with empty or null username")
-    void registerEmptyUser() {
-        //arrange
-        loginDto.setUsername("");
-        WebClient webClient = WebClient.create();
-        //act
-        ClientResponse clientResponse = webClient.post()
-                .uri("http://localhost:" + serverPort + "/auth/signup")
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(loginDto)
-                .exchange()
-                .block(); // Block to get the ClientResponse synchronously
-        //assert
-        assertNotNull(clientResponse, "Response object should not be null");
-        assertEquals(HttpStatus.BAD_REQUEST, clientResponse.statusCode(), "Status code should be BAD_REQUEST");
+  @Order(3)
+  @Test
+  @DisplayName("User can not be created with empty or null username")
+  void registerEmptyUser() {
+    // arrange
+    loginDto.setUsername("");
+    WebClient webClient = WebClient.create();
+    // act
+    ClientResponse clientResponse = webClient.post()
+        .uri("http://localhost:" + serverPort + "/auth/signup")
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(loginDto)
+        .exchange()
+        .block(); // Block to get the ClientResponse synchronously
+    // assert
+    assertNotNull(clientResponse, "Response object should not be null");
+    assertEquals(HttpStatus.BAD_REQUEST, clientResponse.statusCode(), "Status code should be BAD_REQUEST");
 
-        // Extract and assert the response body
-        AuthResponse response = clientResponse.bodyToMono(AuthResponse.class).block();
-        assertNotNull(response, "Response object should not be null");
-        assertNull(response.getJwt(), "JWT token should be null");
-        assertEquals(response.getStatus(), false, "Status should be false");
-        assertEquals("Username cannot be null or empty", response.getMessage(), "Message should match");
-    }
+    // Extract and assert the response body
+    AuthResponse response = clientResponse.bodyToMono(AuthResponse.class).block();
+    assertNotNull(response, "Response object should not be null");
+    assertNull(response.getJwt(), "JWT token should be null");
+    assertEquals(response.getStatus(), false, "Status should be false");
+    assertEquals("Username cannot be null or empty", response.getMessage(), "Message should match");
+  }
 
-    @Order(4)
-    @Test
-    @DisplayName("login user")
-    void login() {
-        //arrange
-        WebClient webClient = WebClient.create();
-        //act
-        ClientResponse clientResponse = webClient.post()
-                .uri("http://localhost:" + serverPort + "/auth/signin")
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(loginDto)
-                .exchange()
-//                .bodyToMono(AuthResponse.class)
-                .block();
-        //assert
-        assertNotNull(clientResponse, "Response object should not be null");
-        assertEquals(clientResponse.statusCode(), HttpStatus.OK, "Status code should be 201 CREATED");
+  @Order(4)
+  @Test
+  @DisplayName("login user")
+  void login() {
+    // arrange
+    WebClient webClient = WebClient.create();
+    // act
+    ClientResponse clientResponse = webClient.post()
+        .uri("http://localhost:" + serverPort + "/auth/signin")
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(loginDto)
+        .exchange()
+        // .bodyToMono(AuthResponse.class)
+        .block();
+    // assert
+    assertNotNull(clientResponse, "Response object should not be null");
+    assertEquals(clientResponse.statusCode(), HttpStatus.OK, "Status code should be 201 CREATED");
 
-        AuthResponse response = clientResponse.bodyToMono(AuthResponse.class).block();
-        assertNotNull(response, "Response object should not be null");
-        assertNotNull(response.getJwt());
-        assertEquals(response.getStatus(), true, "Status should match");
-        assertEquals(response.getMessage(), "Logged in successfully", "Message should match");
-    }
+    AuthResponse response = clientResponse.bodyToMono(AuthResponse.class).block();
+    assertNotNull(response, "Response object should not be null");
+    assertNotNull(response.getJwt());
+    assertEquals(response.getStatus(), true, "Status should match");
+    assertEquals(response.getMessage(), "Logged in successfully", "Message should match");
+  }
 
-    @Order(5)
-    @Test
-    @DisplayName("login user should fail for incorrect credentials")
-    void loginWrongPassword() {
-        //arrange
-        loginDto.setPassword(Math.random() + "");
-        WebClient webClient = WebClient.create();
-        //act
-        ClientResponse clientResponse = webClient.post()
-                .uri("http://localhost:" + serverPort + "/auth/signin")
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(loginDto)
-                .exchange()
-//                .bodyToMono(AuthResponse.class)
-                .block();
-        //assert
-        assertNotNull(clientResponse, "Response object should not be null");
-        assertEquals(clientResponse.statusCode(), HttpStatus.UNAUTHORIZED, "Status code should be 201 CREATED");
+  @Order(5)
+  @Test
+  @DisplayName("login user should fail for incorrect credentials")
+  void loginWrongPassword() {
+    // arrange
+    loginDto.setPassword(Math.random() + "");
+    WebClient webClient = WebClient.create();
+    // act
+    ClientResponse clientResponse = webClient.post()
+        .uri("http://localhost:" + serverPort + "/auth/signin")
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(loginDto)
+        .exchange()
+        // .bodyToMono(AuthResponse.class)
+        .block();
+    // assert
+    assertNotNull(clientResponse, "Response object should not be null");
+    assertEquals(clientResponse.statusCode(), HttpStatus.UNAUTHORIZED, "Status code should be 201 CREATED");
 
-        AuthResponse response = clientResponse.bodyToMono(AuthResponse.class).block();
-        assertNotNull(response, "Response object should not be null");
-        assertNull(response.getJwt());
-        assertEquals(response.getStatus(), false, "Status should match");
-        assertEquals(response.getMessage(), "Unauthorized", "Message should match");
-    }
+    AuthResponse response = clientResponse.bodyToMono(AuthResponse.class).block();
+    assertNotNull(response, "Response object should not be null");
+    assertNull(response.getJwt());
+    assertEquals(response.getStatus(), false, "Status should match");
+    assertEquals(response.getMessage(), "Unauthorized", "Message should match");
+  }
 }

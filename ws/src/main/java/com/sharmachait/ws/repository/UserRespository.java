@@ -8,7 +8,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UserRespository extends JpaRepository<User, String> {
-    void deleteByUsernameAndSpaceId(String username, String spaceId);
-    User findByUsernameAndSpaceId(String username, String spaceId);
-    List<User> findBySpaceIdAndStatus(String spaceId, Status status);
+  void deleteByUsernameAndSpaceId(String username, String spaceId);
+
+  User findByUsernameAndSpaceId(String username, String spaceId);
+
+  List<User> findBySpaceIdAndStatus(String spaceId, Status status);
 }

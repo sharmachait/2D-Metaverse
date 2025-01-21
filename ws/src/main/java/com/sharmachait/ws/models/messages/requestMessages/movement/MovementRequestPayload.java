@@ -1,4 +1,5 @@
 package com.sharmachait.ws.models.messages.requestMessages.movement;
+
 import lombok.*;
 
 @EqualsAndHashCode
@@ -6,10 +7,10 @@ import lombok.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MovementRequestPayload{
-    private String token;
-    private String userId;
-    private String spaceId;
-    private int x;
-    private int y;
+public class MovementRequestPayload {
+  private String token;
+  private String userId;
+  private String spaceId;
+  private int x;
+  private int y;
 }

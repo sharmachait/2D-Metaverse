@@ -41,102 +41,102 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MovementControllerTest {
-    @LocalServerPort
-    private int port;
-    private int httpport = 5455;
-    private String token;
-    private String userId;
-    private WebSocketStompClient stompClient;
-    private CompletableFuture<MovementRequest> movementFuture;
+  @LocalServerPort
+  private int port;
+  private int httpport = 5455;
+  private String token;
+  private String userId;
+  private WebSocketStompClient stompClient;
+  private CompletableFuture<MovementRequest> movementFuture;
 
-    private String getWsPath() {
-        return String.format("ws://localhost:%d/ws", port);
-    }
+  private String getWsPath() {
+    return String.format("ws://localhost:%d/ws", port);
+  }
 
-    @BeforeEach
-    public void setup() {
-        WebSocketClient webSocketClient = new StandardWebSocketClient();
-        WebSocketTransport webSocketTransport = new WebSocketTransport(webSocketClient);
-        List<Transport> transports = Collections.singletonList(webSocketTransport);
-        SockJsClient sockJsClient = new SockJsClient(transports);
+  @BeforeEach
+  public void setup() {
+    WebSocketClient webSocketClient = new StandardWebSocketClient();
+    WebSocketTransport webSocketTransport = new WebSocketTransport(webSocketClient);
+    List<Transport> transports = Collections.singletonList(webSocketTransport);
+    SockJsClient sockJsClient = new SockJsClient(transports);
 
-        stompClient = new WebSocketStompClient(sockJsClient);
-        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
-        movementFuture = new CompletableFuture<>();
+    stompClient = new WebSocketStompClient(sockJsClient);
+    stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+    movementFuture = new CompletableFuture<>();
 
-        LoginDto loginDto = new LoginDto();
-        loginDto.setUsername("usercontroller");
-        loginDto.setPassword("password");
-        loginDto.setRole(Role.ROLE_ADMIN);
-        RestTemplate restTemplate = new RestTemplate();
-        String signupUrl = "http://localhost:" + httpport + "/auth/signup";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<LoginDto> signupRequest = new HttpEntity<>(loginDto, headers);
-        ResponseEntity<AuthResponse> signupResponse = restTemplate.postForEntity(signupUrl, signupRequest, AuthResponse.class);
+    LoginDto loginDto = new LoginDto();
+    loginDto.setUsername("MovementControllerTestuser");
+    loginDto.setPassword("password");
+    loginDto.setRole(Role.ROLE_ADMIN);
+    RestTemplate restTemplate = new RestTemplate();
+    String signupUrl = "http://localhost:" + httpport + "/auth/signup";
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
+    HttpEntity<LoginDto> signupRequest = new HttpEntity<>(loginDto, headers);
+    ResponseEntity<AuthResponse> signupResponse = restTemplate.postForEntity(signupUrl, signupRequest,
+        AuthResponse.class);
 
-        AuthResponse authResponse = signupResponse.getBody();
-        assert authResponse != null : "Signup failed, response is null.";
-        token = authResponse.getJwt();
-        userId = authResponse.getUserId();
-    }
+    AuthResponse authResponse = signupResponse.getBody();
+    assert authResponse != null : "Signup failed, response is null.";
+    token = authResponse.getJwt();
+    userId = authResponse.getUserId();
+  }
 
-    @Test
-    public void testSendAndReceiveMovementMessage() throws InterruptedException, ExecutionException, TimeoutException {
-        StompHeaders connectHeaders = new StompHeaders();
-        // Establish WebSocket connection
-        StompSession stompSession = stompClient.connect(getWsPath(), new StompSessionHandlerAdapter() {
-            @Override
-            public void handleException(StompSession session, StompCommand command,
-                                        StompHeaders headers, byte[] payload, Throwable exception) {
-                movementFuture.completeExceptionally(exception);
-            }
+  @Test
+  public void testSendAndReceiveMovementMessage() throws InterruptedException, ExecutionException, TimeoutException {
+    StompHeaders connectHeaders = new StompHeaders();
+    // Establish WebSocket connection
+    StompSession stompSession = stompClient.connect(getWsPath(), new StompSessionHandlerAdapter() {
+      @Override
+      public void handleException(StompSession session, StompCommand command,
+          StompHeaders headers, byte[] payload, Throwable exception) {
+        movementFuture.completeExceptionally(exception);
+      }
 
-            @Override
-            public void handleTransportError(StompSession session, Throwable exception) {
-                movementFuture.completeExceptionally(exception);
-            }
-        }).get(5, TimeUnit.SECONDS);
-        StompHeaders subscribeHeaders = new StompHeaders();
-        subscribeHeaders.setDestination("/topic/movement");
-        stompSession.subscribe(subscribeHeaders, new StompFrameHandler() {
-            @Override
-            @NonNull
-            public Type getPayloadType(@Nullable StompHeaders headers) {
-                return MovementRequest.class;
-            }
+      @Override
+      public void handleTransportError(StompSession session, Throwable exception) {
+        movementFuture.completeExceptionally(exception);
+      }
+    }).get(5, TimeUnit.SECONDS);
+    StompHeaders subscribeHeaders = new StompHeaders();
+    subscribeHeaders.setDestination("/topic/movement");
+    stompSession.subscribe(subscribeHeaders, new StompFrameHandler() {
+      @Override
+      @NonNull
+      public Type getPayloadType(@Nullable StompHeaders headers) {
+        return MovementRequest.class;
+      }
 
-            @Override
-            public void handleFrame(@Nullable StompHeaders headers, Object payload) {
-                movementFuture.complete((MovementRequest) payload);
-            }
-        });
-        Thread.sleep(500);
-        MovementRequest sentMessage = MovementRequest.builder()
-                .type(MessageType.MOVE)
-                .payload(MovementRequestPayload.builder()
-                        .userId("something")
-                        .spaceId("space")
-                        .x(100)
-                        .y(200)
-                        .token("Bearer "+token)
-                        .build())
-                .build();
+      @Override
+      public void handleFrame(@Nullable StompHeaders headers, Object payload) {
+        movementFuture.complete((MovementRequest) payload);
+      }
+    });
+    Thread.sleep(500);
+    MovementRequest sentMessage = MovementRequest.builder()
+        .type(MessageType.MOVE)
+        .payload(MovementRequestPayload.builder()
+            .userId("something")
+            .spaceId("space")
+            .x(100)
+            .y(200)
+            .token("Bearer " + token)
+            .build())
+        .build();
 
-        // Send the message
-        StompHeaders sendHeaders = new StompHeaders();
-        sendHeaders.setDestination("/app/move");
-        stompSession.send(sendHeaders, sentMessage);
+    // Send the message
+    StompHeaders sendHeaders = new StompHeaders();
+    sendHeaders.setDestination("/app/move");
+    stompSession.send(sendHeaders, sentMessage);
 
+    // Wait and verify the received message
+    MovementRequest receivedMessage = movementFuture.get(5, TimeUnit.SECONDS);
+    MovementRequestPayload sentPayload = sentMessage.getPayload();
+    MovementRequestPayload receivedPayload = receivedMessage.getPayload();
 
-        // Wait and verify the received message
-        MovementRequest receivedMessage = movementFuture.get(5, TimeUnit.SECONDS);
-        MovementRequestPayload sentPayload = sentMessage.getPayload();
-        MovementRequestPayload receivedPayload =  receivedMessage.getPayload();
-
-        assertNotNull(receivedMessage);
-        assertEquals(sentPayload.getX(), receivedPayload.getX());
-        assertEquals(sentPayload.getY(), receivedPayload.getY());
-    }
+    assertNotNull(receivedMessage);
+    assertEquals(sentPayload.getX(), receivedPayload.getX());
+    assertEquals(sentPayload.getY(), receivedPayload.getY());
+  }
 
 }

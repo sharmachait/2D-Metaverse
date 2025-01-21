@@ -9,7 +9,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MovementRequest{
-    private MessageType type;
-    private MovementRequestPayload payload;
+public class MovementRequest {
+  private MessageType type;
+  private MovementRequestPayload payload;
 }

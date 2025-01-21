@@ -17,20 +17,20 @@ import java.util.Objects;
 @NoArgsConstructor
 @Entity
 public class Notification {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
-    private String senderId;
-    private String recipientId;
-    private String message;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private String id;
+  private String senderId;
+  private String recipientId;
+  private String message;
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id); // only use the ID, not any collections
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(id); // only use the ID, not any collections
+  }
 
-    @Override
-    public String toString() {
-        return id;
-    }
+  @Override
+  public String toString() {
+    return id;
+  }
 }

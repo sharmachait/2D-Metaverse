@@ -12,15 +12,16 @@ import org.springframework.web.bind.annotation.RestController;
 @Data
 @RequestMapping("/api/v1/avatar")
 public class AvatarController {
-    private final AvatarService avatarService;
-    @GetMapping
-    public ResponseEntity<?> getAvatars(){
-        try {
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(avatarService.findAll());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+  private final AvatarService avatarService;
+
+  @GetMapping
+  public ResponseEntity<?> getAvatars() {
+    try {
+      return ResponseEntity
+          .status(HttpStatus.CREATED)
+          .body(avatarService.findAll());
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
+  }
 }

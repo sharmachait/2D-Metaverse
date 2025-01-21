@@ -16,25 +16,29 @@ import java.util.Objects;
 @Builder
 public class UserDto {
 
-    private String id;
-    private String username;
-    private Status status;
-    private Role role;
-    private String spaceId;
+  private String id;
+  private String username;
+  private Status status;
+  private Role role;
+  private String spaceId;
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id); // only use the ID, not any collections
-    }
-    @Override
-    public String toString() {
-        return id;
-    }
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof UserDto)) return false;
-        UserDto user = (UserDto) o;
-        return Objects.equals(id, user.id);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(id); // only use the ID, not any collections
+  }
+
+  @Override
+  public String toString() {
+    return id;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (!(o instanceof UserDto))
+      return false;
+    UserDto user = (UserDto) o;
+    return Objects.equals(id, user.id);
+  }
 }

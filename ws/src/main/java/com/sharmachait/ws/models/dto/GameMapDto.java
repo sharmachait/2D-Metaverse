@@ -11,17 +11,18 @@ import java.util.Objects;
 @AllArgsConstructor
 @NoArgsConstructor
 public class GameMapDto {
-    private String id;
-    private String thumbnail;
-    private String dimensions;
-    private List<MapElementDto> mapElements;
-    @Override
-    public int hashCode() {
-        return Objects.hash(id); // only use the ID, not any collections
-    }
+  private String id;
+  private String thumbnail;
+  private String dimensions;
+  private List<MapElementDto> mapElements;
 
-    @Override
-    public String toString() {
-        return id;
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(id); // only use the ID, not any collections
+  }
+
+  @Override
+  public String toString() {
+    return id;
+  }
 }

@@ -17,29 +17,31 @@ import java.util.Set;
 @Entity
 @Data
 public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
-    private String username;
-    private Status status;
-    private Role role;
-    private String spaceId;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private String id;
+  private String username;
+  private Status status;
+  private Role role;
+  private String spaceId;
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id); // only use the ID, not any collections
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(id); // only use the ID, not any collections
+  }
 
-    @Override
-    public String toString() {
-        return id;
-    }
+  @Override
+  public String toString() {
+    return id;
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof User)) return false;
-        User user = (User) o;
-        return Objects.equals(id, user.id);
-    }
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (!(o instanceof User))
+      return false;
+    User user = (User) o;
+    return Objects.equals(id, user.id);
+  }
 }

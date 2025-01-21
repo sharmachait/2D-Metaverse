@@ -8,7 +8,7 @@ import lombok.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class LeaveSpaceResponse{
-    private MessageType type;
-    private LeaveSpaceResponsePayload payload;
+public class LeaveSpaceResponse {
+  private MessageType type;
+  private LeaveSpaceResponsePayload payload;
 }

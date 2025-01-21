@@ -8,8 +8,8 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class JoinSpaceRequestPayload {
-    private String senderId;
-    private String token;
-    private String userId;
-    private String spaceId;
+  private String senderId;
+  private String token;
+  private String userId;
+  private String spaceId;
 }

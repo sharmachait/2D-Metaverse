@@ -8,9 +8,9 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MovementResponsePayload {
-    private int x;
-    private int y;
-    private String token;
-    private String userId;
-    private String spaceId;
+  private int x;
+  private int y;
+  private String token;
+  private String userId;
+  private String spaceId;
 }

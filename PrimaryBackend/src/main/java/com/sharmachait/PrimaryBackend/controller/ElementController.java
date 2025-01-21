@@ -12,16 +12,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/element")
 public class ElementController {
-    private final ElementService elementService;
-    @GetMapping
-//    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<?> getElements() {
-        try {
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(elementService.getAllElements());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+  private final ElementService elementService;
+
+  @GetMapping
+  // @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+  public ResponseEntity<?> getElements() {
+    try {
+      return ResponseEntity
+          .status(HttpStatus.CREATED)
+          .body(elementService.getAllElements());
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
+  }
 }

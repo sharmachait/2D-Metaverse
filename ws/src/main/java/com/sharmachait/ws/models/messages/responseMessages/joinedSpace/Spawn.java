@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Spawn {
-    private int x;
-    private int y;
+  private int x;
+  private int y;
 }

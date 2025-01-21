@@ -1,4 +1,5 @@
 package com.sharmachait.ws.models.messages.responseMessages.joinedSpace;
+
 import lombok.*;
 
 @EqualsAndHashCode
@@ -6,11 +7,11 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class JoinSpaceResponsePayload{
-    private String message;
-    private String token;
-    private String userId;
-    private String spaceId;
-    private int x;
-    private int y;
+public class JoinSpaceResponsePayload {
+  private String message;
+  private String token;
+  private String userId;
+  private String spaceId;
+  private int x;
+  private int y;
 }

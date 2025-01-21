@@ -8,8 +8,11 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 public interface AvatarService {
-    AvatarDto findById(String id) throws NoSuchElementException;
-    AvatarDto save(Avatar avatar);
-    AvatarDto save(AvatarDto avatar);
-    List<AvatarDto> findAll();
+  AvatarDto findById(String id) throws NoSuchElementException;
+
+  AvatarDto save(Avatar avatar);
+
+  AvatarDto save(AvatarDto avatar);
+
+  List<AvatarDto> findAll();
 }

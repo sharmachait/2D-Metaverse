@@ -12,38 +12,41 @@ import java.util.Objects;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SpaceElement {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private String id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "space_id", referencedColumnName = "id")
-    @JsonBackReference
-    private Space space;
+  @ManyToOne(fetch = FetchType.EAGER)
+  @JoinColumn(name = "space_id", referencedColumnName = "id")
+  @JsonBackReference
+  private Space space;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "element_id", referencedColumnName = "id")
-    @JsonBackReference
-    private Element element;
+  @ManyToOne(fetch = FetchType.EAGER)
+  @JoinColumn(name = "element_id", referencedColumnName = "id")
+  @JsonBackReference
+  private Element element;
 
-//    private boolean isStatic;
-    private int x;
-    private int y;
+  // private boolean isStatic;
+  private int x;
+  private int y;
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id); // only use the ID, not any collections
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(id); // only use the ID, not any collections
+  }
 
-    @Override
-    public String toString() {
-        return id;
-    }
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        SpaceElement that = (SpaceElement) o;
-        return Objects.equals(id, that.id);
-    }
+  @Override
+  public String toString() {
+    return id;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+    SpaceElement that = (SpaceElement) o;
+    return Objects.equals(id, that.id);
+  }
 }

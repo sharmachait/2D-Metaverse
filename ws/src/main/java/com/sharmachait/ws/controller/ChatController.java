@@ -23,56 +23,53 @@ import java.util.List;
 @RestController
 public class ChatController {
 
-    private final ChatMessageService chatMessageService;
-    private final SimpMessagingTemplate messagingTemplate;
-//    private final JdbcTemplate jdbc;
+  private final ChatMessageService chatMessageService;
+  private final SimpMessagingTemplate messagingTemplate;
+  // private final JdbcTemplate jdbc;
 
-    @GetMapping("/messages/{senderId}/{recipientId}")
-    public ResponseEntity<List<ChatMessageEntity>> findChatMessages(
-            @PathVariable("senderId") String senderId,
-            @PathVariable("recipientId") String recipientId
-    ){
-        try {
-            List<ChatMessageEntity> chatMessageEntities = chatMessageService.getChatMessages(senderId,recipientId);
-            return ResponseEntity.ok(chatMessageEntities);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
+  @GetMapping("/messages/{senderId}/{recipientId}")
+  public ResponseEntity<List<ChatMessageEntity>> findChatMessages(
+      @PathVariable("senderId") String senderId,
+      @PathVariable("recipientId") String recipientId) {
+    try {
+      List<ChatMessageEntity> chatMessageEntities = chatMessageService.getChatMessages(senderId, recipientId);
+      return ResponseEntity.ok(chatMessageEntities);
+    } catch (Exception e) {
+      e.printStackTrace();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+    }
+  }
+
+  @MessageMapping("/chat") // /app/chat
+  public void processMessage(
+      @Payload ChatMessage chatMessage) {
+    if (chatMessage.getType() != MessageType.CHAT) {
+      return;
+    }
+    ChatMessageEntity chatMessageEntity = new ChatMessageEntity();
+    chatMessageEntity.setSender(chatMessage.getSender());
+    chatMessageEntity.setRecipient(chatMessage.getRecipient());
+    chatMessageEntity.setContent(chatMessage.getPayload().getMessage());
+    chatMessageEntity.setDate(Date.from(Instant.now()));
+
+    try {
+      ChatMessageEntity savedMessage = chatMessageService.save(chatMessageEntity);
+      String recipient = chatMessage.getRecipient();
+      ChatMessageEntityDto dto = ChatMessageEntityDto.builder()
+          .date(savedMessage.getDate())
+          .id(savedMessage.getId())
+          .chatId(savedMessage.getChatId())
+          .content(savedMessage.getContent())
+          .recipient(recipient)
+          .sender(savedMessage.getSender())
+          .build();
+      messagingTemplate.convertAndSendToUser(
+          recipient,
+          "/queue/messages",
+          dto); // user/recipient/queue/messages
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
 
-    @MessageMapping("/chat")// /app/chat
-    public void processMessage(
-            @Payload ChatMessage chatMessage
-    ){
-        if(chatMessage.getType()!= MessageType.CHAT){
-            return;
-        }
-        ChatMessageEntity chatMessageEntity = new ChatMessageEntity();
-        chatMessageEntity.setSender(chatMessage.getSender());
-        chatMessageEntity.setRecipient(chatMessage.getRecipient());
-        chatMessageEntity.setContent(chatMessage.getPayload().getMessage());
-        chatMessageEntity.setDate(Date.from(Instant.now()));
-
-        try{
-            ChatMessageEntity savedMessage = chatMessageService.save(chatMessageEntity);
-            String recipient = chatMessage.getRecipient();
-            ChatMessageEntityDto dto = ChatMessageEntityDto.builder()
-                    .date(savedMessage.getDate())
-                    .id(savedMessage.getId())
-                    .chatId(savedMessage.getChatId())
-                    .content(savedMessage.getContent())
-                    .recipient(recipient)
-                    .sender(savedMessage.getSender())
-                    .build();
-            messagingTemplate.convertAndSendToUser(
-                    recipient,
-                    "/queue/messages",
-                    dto); // user/recipient/queue/messages
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-    }
+  }
 }
