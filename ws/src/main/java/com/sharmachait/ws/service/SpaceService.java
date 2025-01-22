@@ -179,6 +179,7 @@ public class SpaceService {
         .payload(JoinSpaceResponsePayload.builder()
             .x(coor[0])
             .y(coor[1])
+            .username(userEmail)
             .spaceId(request.getPayload().getSpaceId())
             .userId(request.getPayload().getUserId())
             .build())

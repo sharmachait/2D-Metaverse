@@ -12,6 +12,7 @@ public class JoinSpaceResponsePayload {
   private String token;
   private String userId;
   private String spaceId;
+  private String username;
   private int x;
   private int y;
 }

@@ -1,9 +1,21 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Client } from "@stomp/stompjs";
-
+import jwt from "jsonwebtoken";
 const Arena = () => {
+  function getEmailFromToken(token) {
+    try {
+      const decoded = jwt.verify(
+        token,
+        "dsffgasgfgvdhgfhjfgfgfhgfhjgfjhgfghfhgjfsggdfgd"
+      );
+      return decoded.email;
+    } catch (error) {
+      throw new Error("Failed to decode JWT token: " + error.message);
+    }
+  }
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stompClientRef = useRef<Client | null>(null);
+  const userStompClientRef = useRef<Client | null>(null);
   const [currentUser, setCurrentUser] = useState<any>({});
   const [users, setUsers] = useState(new Map());
   const [params, setParams] = useState({ token: "", spaceId: "" });
@@ -59,6 +71,7 @@ const Arena = () => {
         const x: any = message.payload.x;
         const y: any = message.payload.y;
         const userId = message.payload.userId;
+        const username = message.payload.username;
         localStorage.setItem("wsuserId", userId);
 
         setCurrentUser({
@@ -67,8 +80,28 @@ const Arena = () => {
           userId: message.payload.userId,
         });
         const newUsers = new Map(users);
-        newUsers.set(userId, { x, y });
+        newUsers.set(userId, { x, y, username });
         setUsers(newUsers);
+
+        const userStompClient = new Client({
+          brokerURL: "ws://localhost:5456/ws",
+          onConnect: () => {
+            userStompClient.subscribe(
+              `/user/${username}/queue/messages`,
+              (message) => {
+                const parsedMessage = JSON.parse(message.body);
+                handleStompMessage(parsedMessage);
+              }
+            );
+          },
+          onStompError: (frame) => {
+            console.error("Broker reported error:", frame.headers["message"]);
+            console.error("Additional details:", frame.body);
+          },
+        });
+        userStompClient.activate();
+        userStompClientRef.current = userStompClient;
+
         break;
 
       case "MOVE":
@@ -93,9 +126,20 @@ const Arena = () => {
           destination: "/app/space/ping",
           body: JSON.stringify({
             type: "PONG",
-            //////how to get user name will need make changes to backend for that AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+            payload: {
+              userFor: message.payload.userFor,
+              userFrom: user.username,
+              fromX: x,
+              fromY: y,
+            },
           }),
         });
+        break;
+
+      case "PONG":
+        const userFor = message.payload.userFor;
+        const username = getEmailFromToken(params.token);
+        if(userFor === )
         break;
     }
   };
