@@ -1,18 +1,27 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Client } from "@stomp/stompjs";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
+
+interface CustomJwtPayload extends JwtPayload {
+  email: string;
+}
+
 const Arena = () => {
-  function getEmailFromToken(token) {
+  function getEmailFromToken(token: string) {
     try {
       const decoded = jwt.verify(
         token,
         "dsffgasgfgvdhgfhjfgfgfhgfhjgfjhgfghfhgjfsggdfgd"
-      );
+      ) as CustomJwtPayload;
       return decoded.email;
     } catch (error) {
-      throw new Error("Failed to decode JWT token: " + error.message);
+      if (error instanceof Error) {
+        throw new Error("Failed to decode JWT token: " + error.message);
+      }
+      throw new Error("Failed to decode JWT token: Unknown error");
     }
   }
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stompClientRef = useRef<Client | null>(null);
   const userStompClientRef = useRef<Client | null>(null);
@@ -28,21 +37,19 @@ const Arena = () => {
     setParams({ token, spaceId });
 
     const stompClient = new Client({
-      brokerURL: "ws://localhost:5456/ws", // Replace with your STOMP URL
+      brokerURL: "ws://localhost:5456/ws",
       onConnect: () => {
-        // Subscribe to relevant topics
         stompClient.subscribe(`/topic/space/${spaceId}`, (message) => {
           const parsedMessage = JSON.parse(message.body);
           handleStompMessage(parsedMessage);
         });
 
-        // Send "join" message
         stompClient.publish({
           destination: "/app/space",
           body: JSON.stringify({
             type: "JOIN",
             payload: {
-              userId: "need admin id as well",
+              userId: "need admin id as well", //
               spaceId,
               token: "Bearer " + token,
             },
@@ -65,11 +72,11 @@ const Arena = () => {
     };
   }, []);
 
-  const handleStompMessage = (message: any) => {
+  const handleStompMessage = (message) => {
     switch (message.type) {
-      case "SPACE_JOINED":
-        const x: any = message.payload.x;
-        const y: any = message.payload.y;
+      case "SPACE_JOINED": {
+        const x = message.payload.x;
+        const y = message.payload.y;
         const userId = message.payload.userId;
         const username = message.payload.username;
         localStorage.setItem("wsuserId", userId);
@@ -101,9 +108,8 @@ const Arena = () => {
         });
         userStompClient.activate();
         userStompClientRef.current = userStompClient;
-
         break;
-
+      }
       case "MOVE":
         setUsers((prev) => {
           const newUsers = new Map(prev);
@@ -117,9 +123,9 @@ const Arena = () => {
         });
         break;
 
-      case "PING":
+      case "PING": {
         const userid = localStorage.getItem("wsuserId");
-        const user = users.get(userId);
+        const user = users.get(userid);
         const x = user.x;
         const y = user.y;
         stompClientRef.current.publish({
@@ -129,17 +135,27 @@ const Arena = () => {
             payload: {
               userFor: message.payload.userFor,
               userFrom: user.username,
+              userFromId: userid,
+              token: "Bearer " + params.token,
+              spaceId: params.spaceId,
               fromX: x,
               fromY: y,
             },
           }),
         });
         break;
+      }
 
       case "PONG":
-        const userFor = message.payload.userFor;
-        const username = getEmailFromToken(params.token);
-        if(userFor === )
+        setUsers((prev) => {
+          const newUsers = new Map(prev);
+          const userFromId = message.payload.userFromId;
+          const fromX = message.payload.fromX;
+          const fromY = message.payload.fromY;
+          const userFrom = message.payload.userFrom;
+          newUsers.set(userFromId, { fromX, fromY, userFrom });
+          return newUsers;
+        });
         break;
     }
   };
@@ -148,10 +164,12 @@ const Arena = () => {
     if (!currentUser || !stompClientRef.current) return;
 
     stompClientRef.current.publish({
-      destination: "/app/move",
+      destination: "/app/space/move",
       body: JSON.stringify({
         x: newX,
         y: newY,
+        token: "Bearer " + params.token,
+        spaceId: params.spaceId,
         userId: currentUser.userId,
       }),
     });

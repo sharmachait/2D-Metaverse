@@ -206,7 +206,7 @@ public class SpaceService {
                 .userId(request.getPayload().getUserId())
                 .build())
             .build();
-        messagingTemplate.convertAndSend("/topic/space", res);
+        messagingTemplate.convertAndSend("/topic/space/" + spaceId, res);
       }
       MovementResponse res = MovementResponse.builder()
           .type(MessageType.MOVE)
@@ -217,7 +217,7 @@ public class SpaceService {
               .userId(request.getPayload().getUserId())
               .build())
           .build();
-      messagingTemplate.convertAndSend("/topic/space", res);
+      messagingTemplate.convertAndSend("/topic/space/" + spaceId, res);
     } else {
       MovementResponse res = MovementResponse.builder()
           .type(MessageType.MOVE_REJECTED)
@@ -228,7 +228,7 @@ public class SpaceService {
               .userId(request.getPayload().getUserId())
               .build())
           .build();
-      messagingTemplate.convertAndSend("/topic/space", res);
+      messagingTemplate.convertAndSend("/topic/space/" + spaceId, res);
     }
 
   }

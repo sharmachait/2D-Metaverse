@@ -12,6 +12,7 @@ public class PingPayload {
   private String spaceId;
   private String userFor;
   private String userFrom;
+  private String userFromId;
   private int fromX;
   private int fromY;
 }
