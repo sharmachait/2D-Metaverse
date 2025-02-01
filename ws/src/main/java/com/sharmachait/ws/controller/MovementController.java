@@ -6,12 +6,12 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 
-
 @Controller
 public class MovementController {
-    @MessageMapping("/move")//app/movement
-    @SendTo("/topic/movement")
-    public MovementRequest sendMovementMessage(@Payload MovementRequest movementRequest) {
-        return movementRequest;
-    }
+
+  @MessageMapping("/move") // app/move
+  @SendTo("/topic/movement")
+  public MovementRequest sendMovementMessage(@Payload MovementRequest movementRequest) {
+    return movementRequest;
+  }
 }

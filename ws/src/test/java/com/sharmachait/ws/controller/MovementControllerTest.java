@@ -1,15 +1,21 @@
 package com.sharmachait.ws.controller;
 
+import com.sharmachait.ws.models.dto.LoginDto;
+import com.sharmachait.ws.models.entity.Role;
 import com.sharmachait.ws.models.messages.MessageType;
 import com.sharmachait.ws.models.messages.requestMessages.movement.MovementRequest;
 import com.sharmachait.ws.models.messages.requestMessages.movement.MovementRequestPayload;
+import com.sharmachait.ws.models.response.AuthResponse;
 import jakarta.annotation.Nullable;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.junit.jupiter.api.*;
-import org.springframework.messaging.simp.stomp.StompFrameHandler;
-import org.springframework.messaging.simp.stomp.StompHeaders;
-import org.springframework.messaging.simp.stomp.StompSession;
-import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
+import org.springframework.messaging.simp.stomp.*;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.sockjs.client.Transport;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
@@ -20,7 +26,7 @@ import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import java.util.concurrent.CompletableFuture;
@@ -29,70 +35,108 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MovementControllerTest {
-    @LocalServerPort
-    private int port;
+  @LocalServerPort
+  private int port;
+  private int httpport = 5455;
+  private String token;
+  private String userId;
+  private WebSocketStompClient stompClient;
+  private CompletableFuture<MovementRequest> movementFuture;
 
-    private WebSocketStompClient stompClient;
-    private CompletableFuture<MovementRequest> movementFuture;
+  private String getWsPath() {
+    return String.format("ws://localhost:%d/ws", port);
+  }
 
-    private String getWsPath() {
-        return "ws://localhost:" + port + "/ws";
-    }
+  @BeforeEach
+  public void setup() {
+    WebSocketClient webSocketClient = new StandardWebSocketClient();
+    WebSocketTransport webSocketTransport = new WebSocketTransport(webSocketClient);
+    List<Transport> transports = Collections.singletonList(webSocketTransport);
+    SockJsClient sockJsClient = new SockJsClient(transports);
 
-    @BeforeEach
-    public void setup() {
-        List<Transport> transports = new ArrayList<>();
-        transports.add(new WebSocketTransport(new StandardWebSocketClient()));
-        SockJsClient sockJsClient = new SockJsClient(transports);
+    stompClient = new WebSocketStompClient(sockJsClient);
+    stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+    movementFuture = new CompletableFuture<>();
 
-        stompClient = new WebSocketStompClient(sockJsClient);
-        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
-        movementFuture = new CompletableFuture<>();
-    }
+    LoginDto loginDto = new LoginDto();
+    loginDto.setUsername("MovementControllerTestuser");
+    loginDto.setPassword("password");
+    loginDto.setRole(Role.ROLE_ADMIN);
+    RestTemplate restTemplate = new RestTemplate();
+    String signupUrl = "http://localhost:" + httpport + "/auth/signup";
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
+    HttpEntity<LoginDto> signupRequest = new HttpEntity<>(loginDto, headers);
+    ResponseEntity<AuthResponse> signupResponse = restTemplate.postForEntity(signupUrl, signupRequest,
+        AuthResponse.class);
 
-    @Test
-    public void testSendAndReceiveMovementMessage() throws InterruptedException, ExecutionException, TimeoutException {
-        // Establish WebSocket connection
-        StompSession stompSession = stompClient
-                .connectAsync(getWsPath(), new StompSessionHandlerAdapter() {})
-                .get(5, TimeUnit.SECONDS);
+    AuthResponse authResponse = signupResponse.getBody();
+    assert authResponse != null : "Signup failed, response is null.";
+    token = authResponse.getJwt();
+    userId = authResponse.getUserId();
+  }
 
-        // Subscribe to the movement topic
-        stompSession.subscribe("/topic/movement", new StompFrameHandler() {
-            @Override
-            @NonNull
-            public Type getPayloadType(@Nullable StompHeaders headers) {
-                return MovementRequest.class;
-            }
+  @Test
+  public void testSendAndReceiveMovementMessage() throws InterruptedException, ExecutionException, TimeoutException {
+    StompHeaders connectHeaders = new StompHeaders();
+    // Establish WebSocket connection
+    StompSession stompSession = stompClient.connect(getWsPath(), new StompSessionHandlerAdapter() {
+      @Override
+      public void handleException(StompSession session, StompCommand command,
+          StompHeaders headers, byte[] payload, Throwable exception) {
+        movementFuture.completeExceptionally(exception);
+      }
 
-            @Override
-            public void handleFrame(@Nullable StompHeaders headers, Object payload) {
-                movementFuture.complete((MovementRequest) payload);
-            }
-        });
+      @Override
+      public void handleTransportError(StompSession session, Throwable exception) {
+        movementFuture.completeExceptionally(exception);
+      }
+    }).get(5, TimeUnit.SECONDS);
+    StompHeaders subscribeHeaders = new StompHeaders();
+    subscribeHeaders.setDestination("/topic/movement");
+    stompSession.subscribe(subscribeHeaders, new StompFrameHandler() {
+      @Override
+      @NonNull
+      public Type getPayloadType(@Nullable StompHeaders headers) {
+        return MovementRequest.class;
+      }
 
-        MovementRequest sentMessage = MovementRequest.builder()
-                .type(MessageType.MOVE)
-                .payload(MovementRequestPayload.builder()
-                        .x(100)
-                        .y(200)
-                        .token("Bearer eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3MzQ3MjE5NjgsImV4cCI6MTczNDgwODM2OCwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJ3c3NwYWNlY29udHJvbGxlcmFkbWluIiwiaWQiOiI3OGE5NmJhZC02NmQzLTRlYzQtYTU5Yy01YjIzMGE5N2QyYTIifQ.ShA777WRQ_uj58Q4lFEPh4DYVcKwsSnRecZcbu7CuBQ")
-                        .build())
-                .build();
+      @Override
+      public void handleFrame(@Nullable StompHeaders headers, Object payload) {
+        movementFuture.complete((MovementRequest) payload);
+      }
+    });
+    Thread.sleep(500);
+    MovementRequest sentMessage = MovementRequest.builder()
+        .type(MessageType.MOVE)
+        .payload(MovementRequestPayload.builder()
+            .userId("something")
+            .spaceId("space")
+            .x(100)
+            .y(200)
+            .token("Bearer " + token)
+            .build())
+        .build();
 
-        // Send the message
-        stompSession.send("/app/move", sentMessage);
+    // Send the message
+    StompHeaders sendHeaders = new StompHeaders();
+    sendHeaders.setDestination("/app/move");
+    stompSession.send(sendHeaders, sentMessage);
 
-        // Wait and verify the received message
-        MovementRequest receivedMessage = movementFuture.get(5, TimeUnit.SECONDS);
+    // Wait and verify the received message
+    MovementRequest receivedMessage = movementFuture.get(5, TimeUnit.SECONDS);
+    MovementRequestPayload sentPayload = sentMessage.getPayload();
+    MovementRequestPayload receivedPayload = receivedMessage.getPayload();
 
-        assertEquals(sentMessage.getPayload().getX(), receivedMessage.getPayload().getX());
-        assertEquals(sentMessage.getPayload().getY(), receivedMessage.getPayload().getY());
-    }
+    assertNotNull(receivedMessage);
+    assertEquals(sentPayload.getX(), receivedPayload.getX());
+    assertEquals(sentPayload.getY(), receivedPayload.getY());
+  }
 
 }

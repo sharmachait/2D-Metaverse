@@ -1,8 +1,9 @@
 package com.sharmachait.PrimaryBackend.service.gameMap;
 
-import com.sharmachait.PrimaryBackend.models.entity.GameMap;
+import com.sharmachait.PrimaryBackend.models.dto.GameMapDto;
 
 public interface GameMapService {
-    GameMap findById(String id);
-    GameMap save(GameMap gameMap);
+  GameMapDto findById(String id) throws Exception;
+
+  GameMapDto save(GameMapDto gameMap) throws Exception;
 }

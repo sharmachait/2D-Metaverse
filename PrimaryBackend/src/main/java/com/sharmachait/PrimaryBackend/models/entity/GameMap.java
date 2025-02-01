@@ -1,9 +1,12 @@
 package com.sharmachait.PrimaryBackend.models.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Data
@@ -12,25 +15,30 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GameMap {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
-    private int width;
-    private int height;
-    private String name;
-    @OneToMany(
-            mappedBy = "gameMap",
-            fetch = FetchType.EAGER,
-            cascade = CascadeType.ALL
-    )
-    @JsonManagedReference
-    private Set<MapElement> mapElements;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private String id;
+  private int width;
+  private int height;
+  private String name;
+  @OneToMany(mappedBy = "gameMap", cascade = CascadeType.ALL)
+  @JsonManagedReference
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+  private Set<MapElement> mapElements = new HashSet<>();
 
-    @OneToMany(
-            mappedBy = "gameMap",
-            fetch = FetchType.EAGER,
-            cascade = CascadeType.ALL
-    )
-    @JsonManagedReference
-    private Set<Space> spaces;
+  private String thumbnail;
+  @OneToMany(mappedBy = "gameMap", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+  @JsonManagedReference
+  private Set<Space> spaces = new HashSet<>();
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id); // only use the ID, not any collections
+  }
+
+  @Override
+  public String toString() {
+    return id;
+  }
+
 }

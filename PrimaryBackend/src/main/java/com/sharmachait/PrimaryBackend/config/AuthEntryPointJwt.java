@@ -14,24 +14,24 @@ import java.io.IOException;
 @Component
 public class AuthEntryPointJwt implements AuthenticationEntryPoint {
 
-    private static final Logger logger = LoggerFactory.getLogger(AuthEntryPointJwt.class);
+  private static final Logger logger = LoggerFactory.getLogger(AuthEntryPointJwt.class);
 
-    @Override
-    public void commence(HttpServletRequest request,
-                         HttpServletResponse response,
-                         AuthenticationException authException) throws IOException, ServletException {
+  @Override
+  public void commence(HttpServletRequest request,
+      HttpServletResponse response,
+      AuthenticationException authException) throws IOException, ServletException {
 
-        logger.error("Unauthorized error: {}", authException.getMessage());
+    logger.error("Unauthorized error: {}", authException.getMessage());
 
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
-        response.setContentType("application/json");
+    response.setContentType("application/json");
 
-        String errorResponse = "{\"status\":\"error\"," +
-                "\"message\":\"Unauthorized: Authentication is required to access this resource\"," +
-                "\"path\":\"" + request.getRequestURI() + "\"}";
+    String errorResponse = "{\"status\":\"error\"," +
+        "\"message\":\"Unauthorized: Authentication is required to access this resource\"," +
+        "\"path\":\"" + request.getRequestURI() + "\"}";
 
-        response.getWriter().write(errorResponse);
-        response.getWriter().flush();
-    }
+    response.getWriter().write(errorResponse);
+    response.getWriter().flush();
+  }
 }

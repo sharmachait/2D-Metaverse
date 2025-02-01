@@ -1,21 +1,18 @@
 package com.sharmachait.ws.models.messages.responseMessages.joinedSpace;
 
-import com.sharmachait.ws.models.messages.Payload;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
+import lombok.*;
 
-import java.util.List;
-
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode
 @Data
-@SuperBuilder(toBuilder = true)
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class JoinSpaceResponsePayload extends Payload {
-    private List<UserSpawn> users;
-    private int x;
-    private int y;
+public class JoinSpaceResponsePayload {
+  private String message;
+  private String token;
+  private String userId;
+  private String spaceId;
+  private String username;
+  private int x;
+  private int y;
 }

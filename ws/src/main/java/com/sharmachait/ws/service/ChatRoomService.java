@@ -13,43 +13,43 @@ import java.util.Optional;
 @Service
 public class ChatRoomService {
 
-    @Autowired
-    private final ChatRoomRepository chatRoomRepository;
+  @Autowired
+  private final ChatRoomRepository chatRoomRepository;
 
-    public String getChatRoomId(
-            Long senderId,
-            Long recipientId,
-            boolean createNewRoomIfNotExist) throws NoSuchElementException {
-        Optional<ChatRoom> chatRoom = chatRoomRepository.findBySenderIdAndRecipientId(senderId, recipientId);
-        if (chatRoom.isPresent()) {
-            return chatRoom.get().getChatId();
-        }
-        else {
-            if(createNewRoomIfNotExist) {
-                return createChat(senderId,recipientId);
-            }else{
-                throw new NoSuchElementException();
-            }
-        }
+  public ChatRoom getChatRoom(
+      String senderId,
+      String recipientId,
+      boolean createNewRoomIfNotExist) throws NoSuchElementException {
+    Optional<ChatRoom> chatRoom = chatRoomRepository.findBySenderAndRecipient(senderId, recipientId);
+    if (chatRoom.isPresent()) {
+      return chatRoom.get();
+    } else {
+      if (createNewRoomIfNotExist) {
+        return createChat(senderId, recipientId);
+      } else {
+        throw new NoSuchElementException();
+      }
     }
-    public String createChat(Long senderId, Long recipientId) {
-        String chatId = senderId.toString()+"_"+recipientId.toString();
-        String chatIdReverse = recipientId.toString()+"_"+senderId.toString();
+  }
 
-        ChatRoom senderRecipient = ChatRoom.builder()
-                .chatId(chatId)
-                .senderId(senderId)
-                .recipientId(recipientId)
-                .build();
-        chatRoomRepository.save(senderRecipient);
+  public ChatRoom createChat(String senderId, String recipientId) {
+    String chatId = senderId + "_" + recipientId;
+    String chatIdReverse = recipientId + "_" + senderId;
 
-        ChatRoom recipientSender = ChatRoom.builder()
-                .chatId(chatIdReverse)
-                .senderId(recipientId)
-                .recipientId(senderId)
-                .build();
-        chatRoomRepository.save(recipientSender);
+    ChatRoom senderRecipient = ChatRoom.builder()
+        .chatId(chatId)
+        .sender(senderId)
+        .recipient(recipientId)
+        .build();
 
-        return chatId;
-    }
+    ChatRoom recipientSender = ChatRoom.builder()
+        .chatId(chatIdReverse)
+        .sender(recipientId)
+        .recipient(senderId)
+        .build();
+
+    chatRoomRepository.save(recipientSender);
+
+    return chatRoomRepository.save(senderRecipient);
+  }
 }
