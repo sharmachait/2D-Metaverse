@@ -36,9 +36,9 @@ const Arena = () => {
       throw new Error("Failed to decode JWT token: Unknown error");
     }
   }
-  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3MzgxNzM2OTEsImV4cCI6MTczODI2MDA5MSwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFkc2hhcm1hIiwiaWQiOiI1Y2ZjYWY2Ni01NjI4LTQ3MGMtODNiYS0yZDM3NTg1MTliYjQifQ.LG-smERmpMjs0tgo2pTqIBRPlsRi-bYksDo7r_vNK8o
-  // // 558217cd-39c4-49c1-9c3e-8ff0cfd37226
-  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3MzgxNzM3NDEsImV4cCI6MTczODI2MDE0MSwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFzaGFybWEiLCJpZCI6IjRmNDAxNDg5LTczYjUtNGFjNi1iYTE4LWYwZDFhYzIyMjE1ZCJ9.IddfIOPHfuCk7DSI4mflDTo4AXNNT3qdjRGL-YdBkhA
+  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg0MDQxOTMsImV4cCI6MTczODQ5MDU5MywiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFzaGFybWEiLCJpZCI6IjY1NzNlYTU4LWNjZWItNGNjYS1iMzg0LTgzOTIwMjM0ZGU5MCJ9.j79iu18OYBzJQH5GKrrisTObGquH9Va6Bz3VYjlMs2I
+  // // 2113bfab-bce5-4af3-8aff-159c3392b1af
+  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg0MDQyMTQsImV4cCI6MTczODQ5MDYxNCwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFkc2hhcm1hIiwiaWQiOiJiYmYyNWVmZi1kNGMwLTQyODctODhhMC0yZjEyNmVmNjZmN2QifQ.J5149IrcrTSISzKg5-iDhxczjTdOWIpteGxSJOWQ73c
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stompClientRef = useRef<Client | null>(null);
   const userStompClientRef = useRef<Client | null>(null);
@@ -91,7 +91,7 @@ const Arena = () => {
     console.log(
       "------------------------------------------------------------------"
     );
-    const socket = new SockJS("http://localhost:5457/ws");
+    const socket = new SockJS("ws://localhost:5457/ws");
     const client = new Client({
       webSocketFactory: () => socket,
       debug: (str) => console.log(str),
@@ -126,7 +126,7 @@ const Arena = () => {
         setUsers(newUsers);
 
         if (username === getEmailFromToken(params.token)) {
-          const socket = new SockJS("http://localhost:5457/ws");
+          const socket = new SockJS("ws://localhost:5457/ws");
 
           const client = new Client({
             webSocketFactory: () => socket,
