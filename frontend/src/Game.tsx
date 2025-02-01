@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import SockJS from "sockjs-client";
-import { Client, IMessage } from "@stomp/stompjs";
+import { Client } from "@stomp/stompjs";
 import { jwtDecode } from "jwt-decode";
 
 interface CustomJwtPayload {
@@ -46,40 +46,6 @@ const Arena = () => {
   const [users, setUsers] = useState(new Map());
   const [params, setParams] = useState({ token: "", spaceId: "" });
 
-  function onConnected() {
-    if (stompClientRef.current == null) return;
-    stompClientRef.current.subscribe(
-      `/topic/space/${params.spaceId}`,
-      (message) => {
-        const parsedMessage = JSON.parse(message.body);
-        handleStompMessage(parsedMessage);
-      }
-    );
-
-    stompClientRef.current.publish({
-      destination: "/app/space",
-      body: JSON.stringify({
-        type: "JOIN",
-        payload: {
-          userId: "need admin id as well", //
-          spaceId: params.spaceId,
-          token: "Bearer " + params.token,
-        },
-      }),
-    });
-  }
-  function onUserConnected() {
-    if (userStompClientRef.current == null) return;
-    const username = getEmailFromToken(params.token);
-    userStompClientRef.current.subscribe(
-      `/user/${username}/queue/messages`,
-      (message) => {
-        const parsedMessage = JSON.parse(message.body);
-        handleStompMessage(parsedMessage);
-      }
-    );
-  }
-
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get("token") || "";
@@ -91,13 +57,20 @@ const Arena = () => {
     console.log(
       "------------------------------------------------------------------"
     );
-    const socket = new SockJS("ws://localhost:5457/ws");
+
     const client = new Client({
-      webSocketFactory: () => socket,
-      debug: (str) => console.log(str),
-      reconnectDelay: 5000, // Auto-reconnect after 5 seconds
+      webSocketFactory: () => new SockJS("http://localhost:5457/ws"),
+      reconnectDelay: 5000,
+      heartbeatIncoming: 4000,
+      heartbeatOutgoing: 4000,
     });
-    client.onConnect = onConnected;
+
+    client.onConnect = (frame) => {
+      client.subscribe(`/topic/space/${params.spaceId}`, (message) => {
+        const parsedMessage = JSON.parse(message.body);
+        handleStompMessage(parsedMessage);
+      });
+    };
     client.activate();
     stompClientRef.current = client;
     return () => {
@@ -126,14 +99,23 @@ const Arena = () => {
         setUsers(newUsers);
 
         if (username === getEmailFromToken(params.token)) {
-          const socket = new SockJS("ws://localhost:5457/ws");
-
           const client = new Client({
-            webSocketFactory: () => socket,
-            debug: (str) => console.log(str),
-            reconnectDelay: 5000, // Auto-reconnect after 5 seconds
+            webSocketFactory: () => new SockJS("http://localhost:5457/ws"),
+            reconnectDelay: 5000,
+            heartbeatIncoming: 4000,
+            heartbeatOutgoing: 4000,
+            // connectHeaders: {
+            //   "Access-Control-Allow-Origin": "*",
+            // },
           });
-          client.onConnect = onUserConnected;
+
+          client.onConnect = (frame) => {
+            const username = getEmailFromToken(params.token);
+            client.subscribe(`/user/${username}/queue/messages`, (message) => {
+              const parsedMessage = JSON.parse(message.body);
+              handleStompMessage(parsedMessage);
+            });
+          };
           client.activate();
           userStompClientRef.current = client;
         }
@@ -202,11 +184,14 @@ const Arena = () => {
     stompClientRef.current.publish({
       destination: "/app/space/move",
       body: JSON.stringify({
-        x: newX,
-        y: newY,
-        token: "Bearer " + params.token,
-        spaceId: params.spaceId,
-        userId: currentUser.userId,
+        type: "MOVE",
+        payload: {
+          x: newX,
+          y: newY,
+          token: "Bearer " + params.token,
+          spaceId: params.spaceId,
+          userId: currentUser.userId,
+        },
       }),
     });
   };
