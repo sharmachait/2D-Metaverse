@@ -170,9 +170,9 @@ public class SpaceService {
     user = userRespository.save(user);
     request.getPayload().setUserId(user.getId());
 
-    // CompletableFuture.runAsync(() -> {
-    // pingUsersFor(spaceId, userEmail);
-    // });
+    CompletableFuture.runAsync(() -> {
+      pingUsersFor(spaceId, userEmail);
+    });
 
     Space space = getSpaceBySpaceId(spaceId);
     List<SpaceElementDto> spaceElementDtos = getSpaceElementBySpaceId(spaceId);
@@ -204,8 +204,6 @@ public class SpaceService {
             .type(MessageType.MOVE_REJECTED)
             .payload(MovementResponsePayload.builder()
                 .spaceId(request.getPayload().getSpaceId())
-                .x(request.getPayload().getX())
-                .y(request.getPayload().getY())
                 .userId(request.getPayload().getUserId())
                 .build())
             .build();

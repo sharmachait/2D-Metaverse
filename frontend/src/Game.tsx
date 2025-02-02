@@ -36,9 +36,9 @@ const Arena = () => {
       throw new Error("Failed to decode JWT token: Unknown error");
     }
   }
-  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg0ODQ3NTIsImV4cCI6MTczODU3MTE1MiwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFkc2hhcm1hIiwiaWQiOiJmMmZhZWU1My0yNGRkLTQ5MTEtYjg1MC1iNzA0OWJkZmQwMTIifQ.b39VVE-dyaplm5rF5q93MZfiG_w5DFCTRhMsrZmVG0Q
-  // // d36b9eb7-5341-45df-8c38-283d8897135a
-  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg0ODQ3NzcsImV4cCI6MTczODU3MTE3NywiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFzaGFybWEiLCJpZCI6IjQ1MTU4MTAwLWE5MmUtNDdhMi05ZTcxLTdlNDk4YzdmMzliYyJ9.beI71lP-1A9R-lItURMsAQ3CKvqWMDyJlRJ_ZSBLLMY
+  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg1MTM1MDMsImV4cCI6MTczODU5OTkwMywiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFzaGFybWEiLCJpZCI6IjNiNmQ0MDgxLWE4MDEtNDA3Ny1hZDRmLTg1MzJiNTAwODA5NyJ9.UKuMh8Si9uBNqGyaklHkAVCUEP7HTyr8ibJasurOpjU
+  // // 2eef9f0d-f856-4c4d-965d-d29945955f98
+  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg1MTM1MjQsImV4cCI6MTczODU5OTkyNCwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFkc2hhcm1hIiwiaWQiOiJhYWQ0MzhjZC1mN2FhLTQwZjQtYTlkZS0xNTNiNjZkNTZhNzkifQ.6N9EVM8mIdZDNmldntruZUiMZduWlG_qYIfjbknEceg
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stompClientRef = useRef<Client | null>(null);
   const userStompClientRef = useRef<Client | null>(null);
@@ -61,6 +61,7 @@ const Arena = () => {
 
     client.onConnect = (frame) => {
       console.log("subscribing");
+      console.log({ params });
       client.subscribe(`/topic/space/${params.spaceId}`, (message) => {
         const parsedMessage = JSON.parse(message.body);
         console.log(
@@ -70,8 +71,8 @@ const Arena = () => {
         console.log(
           "------------------------------------------------------------------"
         );
-
-        handleStompMessage(parsedMessage);
+        console.log({ params });
+        handleStompMessage(parsedMessage, token, spaceId);
       });
       console.log("joining");
       localStorage.setItem("wsuserId", currentUser.userId);
@@ -94,6 +95,7 @@ const Arena = () => {
         }),
       });
     };
+
     client.activate();
     stompClientRef.current = client;
     return () => {
@@ -103,7 +105,7 @@ const Arena = () => {
     };
   }, []);
 
-  const handleStompMessage = async (message) => {
+  const handleStompMessage = (message, token, spaceId) => {
     switch (message.type) {
       case "SPACE_JOINED": {
         const x = message.payload.x;
@@ -134,7 +136,8 @@ const Arena = () => {
               console.log(
                 "------------------------------------------------------------------"
               );
-              handleStompMessage(parsedMessage);
+              console.log({ params });
+              handleStompMessage(parsedMessage, token, spaceId);
             });
           };
           client.activate();
@@ -157,6 +160,8 @@ const Arena = () => {
         break;
 
       case "PING": {
+        console.log({ email: getEmailFromToken(params.token) });
+
         if (getEmailFromToken(params.token) !== currentUser.username) {
           const userid = localStorage.getItem("wsuserId");
           const user = users.get(userid);
