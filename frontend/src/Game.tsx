@@ -36,9 +36,9 @@ const Arena = () => {
       throw new Error("Failed to decode JWT token: Unknown error");
     }
   }
-  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg0MDQxOTMsImV4cCI6MTczODQ5MDU5MywiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFzaGFybWEiLCJpZCI6IjY1NzNlYTU4LWNjZWItNGNjYS1iMzg0LTgzOTIwMjM0ZGU5MCJ9.j79iu18OYBzJQH5GKrrisTObGquH9Va6Bz3VYjlMs2I
-  // // 2113bfab-bce5-4af3-8aff-159c3392b1af
-  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg0MDQyMTQsImV4cCI6MTczODQ5MDYxNCwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFkc2hhcm1hIiwiaWQiOiJiYmYyNWVmZi1kNGMwLTQyODctODhhMC0yZjEyNmVmNjZmN2QifQ.J5149IrcrTSISzKg5-iDhxczjTdOWIpteGxSJOWQ73c
+  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg0ODQ3NTIsImV4cCI6MTczODU3MTE1MiwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFkc2hhcm1hIiwiaWQiOiJmMmZhZWU1My0yNGRkLTQ5MTEtYjg1MC1iNzA0OWJkZmQwMTIifQ.b39VVE-dyaplm5rF5q93MZfiG_w5DFCTRhMsrZmVG0Q
+  // // d36b9eb7-5341-45df-8c38-283d8897135a
+  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg0ODQ3NzcsImV4cCI6MTczODU3MTE3NywiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFzaGFybWEiLCJpZCI6IjQ1MTU4MTAwLWE5MmUtNDdhMi05ZTcxLTdlNDk4YzdmMzliYyJ9.beI71lP-1A9R-lItURMsAQ3CKvqWMDyJlRJ_ZSBLLMY
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stompClientRef = useRef<Client | null>(null);
   const userStompClientRef = useRef<Client | null>(null);
@@ -51,12 +51,6 @@ const Arena = () => {
     const token = urlParams.get("token") || "";
     const spaceId = urlParams.get("spaceId") || "";
     setParams({ token, spaceId });
-    console.log({ token, spaceId });
-    console.log(getEmailFromToken(token));
-    console.log(getIdFromToken(token));
-    console.log(
-      "------------------------------------------------------------------"
-    );
 
     const client = new Client({
       webSocketFactory: () => new SockJS("http://localhost:5457/ws"),
@@ -66,9 +60,38 @@ const Arena = () => {
     });
 
     client.onConnect = (frame) => {
+      console.log("subscribing");
       client.subscribe(`/topic/space/${params.spaceId}`, (message) => {
         const parsedMessage = JSON.parse(message.body);
+        console.log(
+          "------------------------------------------------------------------"
+        );
+        console.log({ parsedMessage });
+        console.log(
+          "------------------------------------------------------------------"
+        );
+
         handleStompMessage(parsedMessage);
+      });
+      console.log("joining");
+      localStorage.setItem("wsuserId", currentUser.userId);
+
+      setCurrentUser({
+        x: 0,
+        y: 0,
+        userId: getIdFromToken(token),
+      });
+      client.publish({
+        destination: "/app/space",
+        body: JSON.stringify({
+          type: "JOIN",
+          payload: {
+            senderId: getIdFromToken(token),
+            userId: getIdFromToken(token),
+            spaceId: params.spaceId,
+            token: "Bearer " + token,
+          },
+        }),
       });
     };
     client.activate();
@@ -80,20 +103,14 @@ const Arena = () => {
     };
   }, []);
 
-  const handleStompMessage = (message) => {
+  const handleStompMessage = async (message) => {
     switch (message.type) {
       case "SPACE_JOINED": {
         const x = message.payload.x;
         const y = message.payload.y;
         const userId = message.payload.userId;
         const username = message.payload.username;
-        localStorage.setItem("wsuserId", userId);
 
-        setCurrentUser({
-          x: message.payload.x,
-          y: message.payload.y,
-          userId: message.payload.userId,
-        });
         const newUsers = new Map(users);
         newUsers.set(userId, { x, y, username });
         setUsers(newUsers);
@@ -104,15 +121,19 @@ const Arena = () => {
             reconnectDelay: 5000,
             heartbeatIncoming: 4000,
             heartbeatOutgoing: 4000,
-            // connectHeaders: {
-            //   "Access-Control-Allow-Origin": "*",
-            // },
           });
 
           client.onConnect = (frame) => {
             const username = getEmailFromToken(params.token);
             client.subscribe(`/user/${username}/queue/messages`, (message) => {
               const parsedMessage = JSON.parse(message.body);
+              console.log(
+                "------------------------------------------------------------------"
+              );
+              console.log({ parsedMessage });
+              console.log(
+                "------------------------------------------------------------------"
+              );
               handleStompMessage(parsedMessage);
             });
           };
@@ -136,25 +157,28 @@ const Arena = () => {
         break;
 
       case "PING": {
-        const userid = localStorage.getItem("wsuserId");
-        const user = users.get(userid);
-        const x = user.x;
-        const y = user.y;
-        stompClientRef.current.publish({
-          destination: "/app/space/ping",
-          body: JSON.stringify({
-            type: "PONG",
-            payload: {
-              userFor: message.payload.userFor,
-              userFrom: user.username,
-              userFromId: userid,
-              token: "Bearer " + params.token,
-              spaceId: params.spaceId,
-              fromX: x,
-              fromY: y,
-            },
-          }),
-        });
+        if (getEmailFromToken(params.token) !== currentUser.username) {
+          const userid = localStorage.getItem("wsuserId");
+          const user = users.get(userid);
+          const x = user.x;
+          const y = user.y;
+          stompClientRef.current.publish({
+            destination: "/app/space/ping",
+            body: JSON.stringify({
+              type: "PONG",
+              payload: {
+                userFor: message.payload.userFor,
+                userFrom: user.username,
+                userFromId: userid,
+                token: "Bearer " + params.token,
+                spaceId: params.spaceId,
+                fromX: x,
+                fromY: y,
+              },
+            }),
+          });
+        }
+
         break;
       }
 

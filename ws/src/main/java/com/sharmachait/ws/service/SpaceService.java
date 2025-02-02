@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class SpaceService {
@@ -121,7 +122,7 @@ public class SpaceService {
         request);
   }
 
-  public void pingUsersFor(String spaceId, String userEmail) throws Exception {
+  public void pingUsersFor(String spaceId, String userEmail) {
     messagingTemplate.convertAndSend("/topic/space/" + spaceId, Ping.builder()
         .type(MessageType.PING)
         .payload(PingPayload.builder()
@@ -169,8 +170,10 @@ public class SpaceService {
     user = userRespository.save(user);
     request.getPayload().setUserId(user.getId());
 
-    pingUsersFor(spaceId, userEmail);
-    Thread.sleep(1000);
+    // CompletableFuture.runAsync(() -> {
+    // pingUsersFor(spaceId, userEmail);
+    // });
+
     Space space = getSpaceBySpaceId(spaceId);
     List<SpaceElementDto> spaceElementDtos = getSpaceElementBySpaceId(spaceId);
     int coor[] = generateSpawn(spaceElementDtos, space);
