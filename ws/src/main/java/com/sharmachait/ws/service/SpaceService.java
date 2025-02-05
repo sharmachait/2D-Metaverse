@@ -49,7 +49,7 @@ public class SpaceService {
   public Space getSpaceBySpaceId(String spaceId) throws Exception {
     String SPACE_QUERY = """
             SELECT *
-            FROM space s
+            FROM space as s
             WHERE s.id = ?
         """;
     String SPACE_ELEMENTS_QUERY = """
@@ -153,42 +153,46 @@ public class SpaceService {
     return new int[0];
   }
 
-  public void join(JoinSpaceRequest request, SimpMessageHeaderAccessor headerAccessor) throws Exception {
-    String token = request.getPayload().getToken();
-    String userEmail = JwtProvider.getEmailFromToken(token);
-    String spaceId = request.getPayload().getSpaceId();
+  public void join(JoinSpaceRequest request, SimpMessageHeaderAccessor headerAccessor, String spaceId, String token)
+      throws Exception {
+    try {
 
-    headerAccessor.getSessionAttributes().put("user___space", userEmail + "___" + spaceId);
+      String userEmail = JwtProvider.getEmailFromToken(token);
 
-    User user = User.builder()
-        .status(Status.ONLINE)
-        .role(Role.ROLE_USER)
-        .spaceId(spaceId)
-        .username(userEmail)
-        .build();
+      headerAccessor.getSessionAttributes().put("user___space", userEmail + "___" + spaceId);
 
-    user = userRespository.save(user);
-    request.getPayload().setUserId(user.getId());
+      User user = User.builder()
+          .status(Status.ONLINE)
+          .role(Role.ROLE_USER)
+          .spaceId(spaceId)
+          .username(userEmail)
+          .build();
 
-    CompletableFuture.runAsync(() -> {
-      pingUsersFor(spaceId, userEmail);
-    });
+      user = userRespository.save(user);
+      request.getPayload().setUserId(user.getId());
 
-    Space space = getSpaceBySpaceId(spaceId);
-    List<SpaceElementDto> spaceElementDtos = getSpaceElementBySpaceId(spaceId);
-    int coor[] = generateSpawn(spaceElementDtos, space);
-    JoinSpaceResponse response = JoinSpaceResponse.builder()
-        .type(MessageType.SPACE_JOINED)
-        .payload(JoinSpaceResponsePayload.builder()
-            .x(coor[0])
-            .y(coor[1])
-            .username(userEmail)
-            .spaceId(request.getPayload().getSpaceId())
-            .userId(request.getPayload().getUserId())
-            .build())
-        .build();
+      CompletableFuture.runAsync(() -> {
+        pingUsersFor(spaceId, userEmail);
+      });
 
-    messagingTemplate.convertAndSend("/topic/space/" + spaceId, response);
+      Space space = getSpaceBySpaceId(spaceId);
+      List<SpaceElementDto> spaceElementDtos = getSpaceElementBySpaceId(spaceId);
+      int coor[] = generateSpawn(spaceElementDtos, space);
+      JoinSpaceResponse response = JoinSpaceResponse.builder()
+          .type(MessageType.SPACE_JOINED)
+          .payload(JoinSpaceResponsePayload.builder()
+              .x(coor[0])
+              .y(coor[1])
+              .username(userEmail)
+              .spaceId(request.getPayload().getSpaceId())
+              .userId(request.getPayload().getUserId())
+              .build())
+          .build();
+
+      messagingTemplate.convertAndSend("/topic/space/" + spaceId, response);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   public void move(MovementRequest request, SimpMessageHeaderAccessor headerAccessor) throws Exception {

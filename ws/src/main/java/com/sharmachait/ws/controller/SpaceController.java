@@ -5,7 +5,9 @@ import com.sharmachait.ws.models.messages.Ping;
 import com.sharmachait.ws.models.messages.requestMessages.joinSpace.JoinSpaceRequest;
 import com.sharmachait.ws.models.messages.requestMessages.movement.MovementRequest;
 import com.sharmachait.ws.service.SpaceService;
-import com.sharmachait.ws.service.UserService;
+
+import java.net.URI;
+import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -20,12 +22,31 @@ public class SpaceController {
   private SpaceService spaceService;
 
   @MessageMapping("/space")
-  public void joinSpace(@Payload JoinSpaceRequest request, SimpMessageHeaderAccessor headerAccessor) throws Exception {
+  public void joinSpace(@Payload JoinSpaceRequest request,
+      SimpMessageHeaderAccessor headerAccessor) throws Exception {
+    // String uri = headerAccessor.getSessionAttributes().get("uri").toString();
+    // URI parsedUri = new URI(uri);
+    // String query = parsedUri.getQuery();
+
+    // String spaceId = Arrays.stream(query.split("&"))
+    // .filter(param -> param.startsWith("spaceId="))
+    // .map(param -> param.split("=")[1])
+    // .findFirst()
+    // .orElse(request.getPayload().getSpaceId());
+
+    // String token = Arrays.stream(query.split("&"))
+    // .filter(param -> param.startsWith("token="))
+    // .map(param -> param.split("=")[1])
+    // .findFirst()
+    // .orElse(request.getPayload().getToken());
+
+    String spaceId = request.getPayload().getSpaceId();
+    String token = request.getPayload().getToken();
 
     if (request.getType().equals(MessageType.LEAVE)) {
       spaceService.leave(request, headerAccessor);
     } else if (request.getType().equals(MessageType.JOIN)) {
-      spaceService.join(request, headerAccessor);
+      spaceService.join(request, headerAccessor, spaceId, token);
     } else {
       throw new Exception();
     }

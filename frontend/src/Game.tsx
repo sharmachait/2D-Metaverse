@@ -36,9 +36,10 @@ const Arena = () => {
       throw new Error("Failed to decode JWT token: Unknown error");
     }
   }
-  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg1MTM1MDMsImV4cCI6MTczODU5OTkwMywiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFzaGFybWEiLCJpZCI6IjNiNmQ0MDgxLWE4MDEtNDA3Ny1hZDRmLTg1MzJiNTAwODA5NyJ9.UKuMh8Si9uBNqGyaklHkAVCUEP7HTyr8ibJasurOpjU
-  // // 2eef9f0d-f856-4c4d-965d-d29945955f98
-  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg1MTM1MjQsImV4cCI6MTczODU5OTkyNCwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFkc2hhcm1hIiwiaWQiOiJhYWQ0MzhjZC1mN2FhLTQwZjQtYTlkZS0xNTNiNjZkNTZhNzkifQ.6N9EVM8mIdZDNmldntruZUiMZduWlG_qYIfjbknEceg
+  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg3MjM0NzQsImV4cCI6MTczODgwOTg3NCwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFkc2hhcm1hIiwiaWQiOiI2YWY0NjY5Mi1jYjBlLTRiYzUtYTk3Zi1hNzI1Y2EyYmM4YzQifQ.PdYc85LySQy6ftdQUvDYmjtvmMsDFhSr9g1WaeFUzaU
+  // // 3b49053a-6ff8-4555-a82a-662a247d3f31
+  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg3MjM0OTcsImV4cCI6MTczODgwOTg5NywiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFzaGFybWEiLCJpZCI6IjIyYmFiNjg2LTMxZTUtNGY4MS04NjA5LTU3NDg2YjkzYjQzYiJ9.Z2Xn8Tq7VN_MtcFnkH51KZishoTkkXd33B03EkoVASo
+  // http://localhost:5173/?token=eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg3MjM0OTcsImV4cCI6MTczODgwOTg5NywiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFzaGFybWEiLCJpZCI6IjIyYmFiNjg2LTMxZTUtNGY4MS04NjA5LTU3NDg2YjkzYjQzYiJ9.Z2Xn8Tq7VN_MtcFnkH51KZishoTkkXd33B03EkoVASo&spaceId=3b49053a-6ff8-4555-a82a-662a247d3f31
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stompClientRef = useRef<Client | null>(null);
   const userStompClientRef = useRef<Client | null>(null);
@@ -62,7 +63,7 @@ const Arena = () => {
     client.onConnect = (frame) => {
       console.log("subscribing");
       console.log({ params });
-      client.subscribe(`/topic/space/${params.spaceId}`, (message) => {
+      client.subscribe(`/topic/space/${spaceId}`, (message) => {
         const parsedMessage = JSON.parse(message.body);
         console.log(
           "------------------------------------------------------------------"
@@ -75,13 +76,7 @@ const Arena = () => {
         handleStompMessage(parsedMessage, token, spaceId);
       });
       console.log("joining");
-      localStorage.setItem("wsuserId", currentUser.userId);
 
-      setCurrentUser({
-        x: 0,
-        y: 0,
-        userId: getIdFromToken(token),
-      });
       client.publish({
         destination: "/app/space",
         body: JSON.stringify({
@@ -89,7 +84,7 @@ const Arena = () => {
           payload: {
             senderId: getIdFromToken(token),
             userId: getIdFromToken(token),
-            spaceId: params.spaceId,
+            spaceId: spaceId,
             token: "Bearer " + token,
           },
         }),
@@ -118,6 +113,19 @@ const Arena = () => {
         setUsers(newUsers);
 
         if (username === getEmailFromToken(params.token)) {
+          localStorage.setItem("wsuserId", userId);
+          console.log(
+            "==========================================================================="
+          );
+
+          console.log({ "id from payload": userId });
+          console.log({ "id from token": getIdFromToken(token) });
+          setCurrentUser({
+            x: 0,
+            y: 0,
+            userId: getIdFromToken(token),
+          });
+
           const client = new Client({
             webSocketFactory: () => new SockJS("http://localhost:5457/ws"),
             reconnectDelay: 5000,
