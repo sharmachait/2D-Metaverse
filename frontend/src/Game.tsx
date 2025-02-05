@@ -36,10 +36,10 @@ const Arena = () => {
       throw new Error("Failed to decode JWT token: Unknown error");
     }
   }
-  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg3MjM0NzQsImV4cCI6MTczODgwOTg3NCwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFkc2hhcm1hIiwiaWQiOiI2YWY0NjY5Mi1jYjBlLTRiYzUtYTk3Zi1hNzI1Y2EyYmM4YzQifQ.PdYc85LySQy6ftdQUvDYmjtvmMsDFhSr9g1WaeFUzaU
-  // // 3b49053a-6ff8-4555-a82a-662a247d3f31
-  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg3MjM0OTcsImV4cCI6MTczODgwOTg5NywiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFzaGFybWEiLCJpZCI6IjIyYmFiNjg2LTMxZTUtNGY4MS04NjA5LTU3NDg2YjkzYjQzYiJ9.Z2Xn8Tq7VN_MtcFnkH51KZishoTkkXd33B03EkoVASo
-  // http://localhost:5173/?token=eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg3MjM0OTcsImV4cCI6MTczODgwOTg5NywiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFzaGFybWEiLCJpZCI6IjIyYmFiNjg2LTMxZTUtNGY4MS04NjA5LTU3NDg2YjkzYjQzYiJ9.Z2Xn8Tq7VN_MtcFnkH51KZishoTkkXd33B03EkoVASo&spaceId=3b49053a-6ff8-4555-a82a-662a247d3f31
+  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg3Mzg3NTMsImV4cCI6MTczODgyNTE1MywiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFzaGFybWEiLCJpZCI6IjQ0ZmZkZDIyLTI4ZGMtNGQwMS1hZGRhLTQxNTM4ZTMwNzVjZiJ9.uUzIbu_m_NQFbh05koBVW2JCEKlxTr7Ci9cLtJSsOQI
+  // // 07a4a0b3-7c9d-4fc6-bbe5-ca2ce79761c8
+  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg3Mzg3OTYsImV4cCI6MTczODgyNTE5NiwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFkc2hhcm1hIiwiaWQiOiIzYzU4MGNhMy1lOTBlLTRiNjctYTBjYS0xMWZkZTBjZjIxYTcifQ.qwEePM7mTIfPty2cx1PwPrDOY5G3fTDH-REPpJ4mrHg
+  // http://localhost:5173/?token=eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg3Mzg3OTYsImV4cCI6MTczODgyNTE5NiwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFkc2hhcm1hIiwiaWQiOiIzYzU4MGNhMy1lOTBlLTRiNjctYTBjYS0xMWZkZTBjZjIxYTcifQ.qwEePM7mTIfPty2cx1PwPrDOY5G3fTDH-REPpJ4mrHg&spaceId=07a4a0b3-7c9d-4fc6-bbe5-ca2ce79761c8
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stompClientRef = useRef<Client | null>(null);
   const userStompClientRef = useRef<Client | null>(null);
@@ -108,22 +108,17 @@ const Arena = () => {
         const userId = message.payload.userId;
         const username = message.payload.username;
 
-        const newUsers = new Map(users);
-        newUsers.set(userId, { x, y, username });
-        setUsers(newUsers);
-
-        if (username === getEmailFromToken(params.token)) {
+        if (username === getEmailFromToken(token)) {
           localStorage.setItem("wsuserId", userId);
           console.log(
             "==========================================================================="
           );
-
           console.log({ "id from payload": userId });
           console.log({ "id from token": getIdFromToken(token) });
           setCurrentUser({
             x: 0,
             y: 0,
-            userId: getIdFromToken(token),
+            userId: userId,
           });
 
           const client = new Client({
@@ -150,21 +145,41 @@ const Arena = () => {
           };
           client.activate();
           userStompClientRef.current = client;
+        } else {
+          const newUsers = new Map(users);
+          newUsers.set(userId, { x, y, username });
+          setUsers(newUsers);
         }
+        console.log({ currentUser });
 
         break;
       }
       case "MOVE":
-        setUsers((prev) => {
-          const newUsers = new Map(prev);
-          const user = newUsers.get(message.payload.userId);
-          if (user) {
-            user.x = message.payload.x;
-            user.y = message.payload.y;
-            newUsers.set(message.payload.userId, user);
-          }
-          return newUsers;
-        });
+        console.log(
+          "***************************************************************"
+        );
+
+        console.log({ "current user id": currentUser.userId });
+        console.log({ "user id from payload": message.payload.userId });
+        if (currentUser.userId === message.payload.userId) {
+          setCurrentUser({
+            x: message.payload.x,
+            y: message.payload.y,
+            userId: message.payload.userId,
+          });
+        } else {
+          setUsers((prev) => {
+            const newUsers = new Map(prev);
+            const user = newUsers.get(message.payload.userId);
+            if (user) {
+              user.x = message.payload.x;
+              user.y = message.payload.y;
+              newUsers.set(message.payload.userId, user);
+            }
+            return newUsers;
+          });
+        }
+
         break;
 
       case "PING": {
@@ -309,8 +324,9 @@ const Arena = () => {
       <div className="mb-4">
         <p className="text-sm text-gray-600">Token: {params.token}</p>
         <p className="text-sm text-gray-600">Space ID: {params.spaceId}</p>
+        <p className="text-sm text-gray-600">Users: {users.size}</p>
         <p className="text-sm text-gray-600">
-          Connected Users: {users.size + (currentUser ? 1 : 0)}
+          current User: {currentUser ? 1 : 0}
         </p>
       </div>
       <div className="border rounded-lg overflow-hidden">
