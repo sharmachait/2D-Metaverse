@@ -45,10 +45,10 @@ A real-time virtual space platform built with Spring Boot, WebSocket, and WebRTC
 - 🚧 Azure Build Agents (self-hosted docker with docker-in-docker capabilities)
 
 ### Frontend
-- 🚧 HTML/CSS/JavaScript/TypeScript
+- ✅ HTML/CSS/JavaScript/TypeScript
 - 🚧 Tailwind CSS
-- 🚧 React.js
-- 🚧 STOMP.js for WebSocket communication
+- ✅ React.
+- ✅ STOMP.js for WebSocket communication
 
 ## Current Status
 ✅ = Implemented  
