@@ -36,14 +36,31 @@ const Arena = () => {
       throw new Error("Failed to decode JWT token: Unknown error");
     }
   }
-  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg4MTA1ODAsImV4cCI6MTczODg5Njk4MCwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFzaGFybWEiLCJpZCI6IjJhYmU2NGJiLWQwNGMtNDI4ZC05Y2M3LTM5NjI2NTA4NzViOSJ9.ykS6ttRFAbCzntGkyUXA2mJghJ-ZR9YFa5x73F2joqU
-  // // 93d9ad1f-232b-40b7-bc05-5823e71991f7
-  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg4MTA2MzYsImV4cCI6MTczODg5NzAzNiwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFuc3lhc2hhcm1hIiwiaWQiOiI4MDY5ZTkxYi04NGIxLTQ0OGEtYmNlZi02ODIyMjU4NzE1ZWQifQ.xp4nQaDe7v4JS5E8xc0-ycxnNKNCsC5RV2OXsmyGSj8
-  // http://localhost:5173/?token=eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg4MTA1ODAsImV4cCI6MTczODg5Njk4MCwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFzaGFybWEiLCJpZCI6IjJhYmU2NGJiLWQwNGMtNDI4ZC05Y2M3LTM5NjI2NTA4NzViOSJ9.ykS6ttRFAbCzntGkyUXA2mJghJ-ZR9YFa5x73F2joqU&spaceId=93d9ad1f-232b-40b7-bc05-5823e71991f7
+  // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg4NjczMDgsImV4cCI6MTczODk1MzcwOCwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFuc3lhZHNoYXJtYSIsImlkIjoiNDZiMTk5NGQtOWJmZS00MzZhLTkxYTMtOThiN2E2NWM5NzdjIn0.sipupaCTdccnfi0rx8-QSYXqkdmJCtGwWYZ0EHXSLV4
+  // f1877458-29d2-449d-a693-51edd3d38e19
+  // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg4NjcyOTksImV4cCI6MTczODk1MzY5OSwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFuc3lhc2hhcm1hIiwiaWQiOiI5YjhmMzA3NS02NTE4LTRjYWUtODg5OS00MWRhNDgyNTAzZjUifQ.B-8aFiVfxZPg4oHNiDGJqMQtBYUCAadSIHB-e0eoB70
+  // http://localhost:5173/?token=eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg4NjczMDgsImV4cCI6MTczODk1MzcwOCwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFuc3lhZHNoYXJtYSIsImlkIjoiNDZiMTk5NGQtOWJmZS00MzZhLTkxYTMtOThiN2E2NWM5NzdjIn0.sipupaCTdccnfi0rx8-QSYXqkdmJCtGwWYZ0EHXSLV4&spaceId=f1877458-29d2-449d-a693-51edd3d38e19
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stompClientRef = useRef<Client | null>(null);
   const userStompClientRef = useRef<Client | null>(null);
-  const [currentUser, setCurrentUser] = useState<User>({});
+
+  const currentUserLocalStorage = () => {
+    return {
+      x: localStorage.getItem("x"),
+      y: localStorage.getItem("y"),
+      userId: localStorage.getItem("userId"),
+      username: localStorage.getItem("username"),
+      token: localStorage.getItem("token"),
+    };
+  };
+  const setCurrentUserLocalStorage = (prev: any) => {
+    if (prev.x) localStorage.setItem("x", prev.x.toString());
+    if (prev.y) localStorage.setItem("y", prev.y.toString());
+    if (prev.userId) localStorage.setItem("userId", prev.userId);
+    if (prev.username) localStorage.setItem("username", prev.username);
+    if (prev.token) localStorage.setItem("token", prev.token);
+  };
+
   const [users, setUsers] = useState(new Map());
   const [params, setParams] = useState({ token: "", spaceId: "" });
 
@@ -51,6 +68,7 @@ const Arena = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get("token") || "";
     const spaceId = urlParams.get("spaceId") || "";
+    setCurrentUserLocalStorage({ token });
     setParams({ token, spaceId });
 
     const client = new Client({
@@ -73,13 +91,7 @@ const Arena = () => {
           "------------------------------------------------------------------"
         );
         console.log({ params });
-        handleStompMessage(
-          parsedMessage,
-          token,
-          spaceId,
-          currentUser,
-          setCurrentUser
-        );
+        handleStompMessage(parsedMessage, token, spaceId);
       });
       console.log("joining");
 
@@ -105,156 +117,138 @@ const Arena = () => {
       }
     };
   }, []);
-  const currentUserRef = useRef<User>({});
-  useEffect(() => {
-    currentUserRef.current = currentUser;
-  }, [currentUser]);
-  const handleStompMessage = (
-    message,
-    token,
-    spaceId,
-    currentUserParam,
-    setCurrentUserParam
-  ) => {
+
+  const handleStompMessage = (message, token, spaceId) => {
     switch (message.type) {
-      case "SPACE_JOINED": {
-        const x = message.payload.x;
-        const y = message.payload.y;
-        const userId = message.payload.userId;
-        const username = message.payload.username;
-
-        if (username === getEmailFromToken(token)) {
-          localStorage.setItem("wsuserId", userId);
-          console.log(
-            "==========================================================================="
-          );
-          console.log({ "id from payload": userId });
-          console.log({ "id from token": getIdFromToken(token) });
-          setCurrentUserParam((prev) => ({
-            x: 0,
-            y: 0,
-            userId: userId,
-            username: username,
-          }));
-
-          const client = new Client({
-            webSocketFactory: () => new SockJS("http://localhost:5457/ws"),
-            reconnectDelay: 5000,
-            heartbeatIncoming: 4000,
-            heartbeatOutgoing: 4000,
-          });
-
-          client.onConnect = (frame) => {
-            const username = getEmailFromToken(params.token);
-            client.subscribe(`/user/${username}/queue/messages`, (message) => {
-              const parsedMessage = JSON.parse(message.body);
-              console.log(
-                "------------------------------------------------------------------"
-              );
-              console.log({ parsedMessage });
-              console.log(
-                "------------------------------------------------------------------"
-              );
-              console.log({ params });
-              handleStompMessage(
-                parsedMessage,
-                token,
-                spaceId,
-                currentUserParam,
-                setCurrentUser
-              );
-            });
-          };
-          client.activate();
-          userStompClientRef.current = client;
-        } else {
-          const newUsers = new Map(users);
-          newUsers.set(userId, { x, y, username });
-          setUsers(newUsers);
-        }
-        console.log({ currentUserParam });
-
+      case "SPACE_JOINED":
+        joined();
         break;
-      }
       case "MOVE":
-        console.log(
-          "***************************************************************"
-        );
-
-        console.log({ "current user id": currentUserRef.current.userId });
-        console.log({ "user id from payload": message.payload.userId });
-        if (currentUserRef.current.userId === message.payload.userId) {
-          setCurrentUserParam((prev) => ({
-            x: message.payload.x,
-            y: message.payload.y,
-            userId: message.payload.userId,
-            username: prev.username,
-          }));
-        } else {
-          setUsers((prev) => {
-            const newUsers = new Map(prev);
-            const user = newUsers.get(message.payload.userId);
-            if (user) {
-              user.x = message.payload.x;
-              user.y = message.payload.y;
-              newUsers.set(message.payload.userId, user);
-            }
-            return newUsers;
-          });
-        }
-
+        move();
         break;
-
-      case "PING": {
-        console.log({ email: getEmailFromToken(token) });
-
-        if (getEmailFromToken(token) !== currentUserRef.current.username) {
-          const userid = localStorage.getItem("wsuserId");
-          const user = users.get(userid);
-          const x = user.x;
-          const y = user.y;
-          stompClientRef.current.publish({
-            destination: "/app/space/ping",
-            body: JSON.stringify({
-              type: "PONG",
-              payload: {
-                userFor: message.payload.userFor,
-                userFrom: user.username,
-                userFromId: userid,
-                token: "Bearer " + token,
-                spaceId: spaceId,
-                fromX: x,
-                fromY: y,
-              },
-            }),
-          });
-        }
-
+      case "PING":
+        ping();
         break;
+      case "PONG":
+        pong();
+        break;
+    }
+
+    function pong() {
+      setUsers((prev) => {
+        const newUsers = new Map(prev);
+        const userFromId = message.payload.userFromId;
+        const user = newUsers.get(userFromId) || {};
+        const fromX = message.payload.fromX;
+        const fromY = message.payload.fromY;
+        const userFrom = message.payload.userFrom;
+        newUsers.set(userFromId, {
+          ...user,
+          x: fromX,
+          y: fromY,
+          username: userFrom,
+        });
+        return newUsers;
+      });
+    }
+
+    function ping() {
+      console.log({ email: getEmailFromToken(token) });
+
+      if (getEmailFromToken(token) !== currentUserLocalStorage().username) {
+        const userid = currentUserLocalStorage().userId;
+        const x = currentUserLocalStorage().x;
+        const y = currentUserLocalStorage().y;
+        stompClientRef.current.publish({
+          destination: "/app/space/ping",
+          body: JSON.stringify({
+            type: "PONG",
+            payload: {
+              userFor: message.payload.userFor,
+              userFrom: currentUserLocalStorage().username,
+              userFromId: userid,
+              token: "Bearer " + token,
+              spaceId: spaceId,
+              fromX: x,
+              fromY: y,
+            },
+          }),
+        });
+      }
+    }
+
+    function move() {
+      console.log(
+        "***************************************************************"
+      );
+
+      console.log({ "current user id": currentUserLocalStorage().userId });
+      console.log({ "user id from payload": message.payload.userId });
+      if (currentUserLocalStorage().userId === message.payload.userId) {
+        setCurrentUserLocalStorage({
+          x: message.payload.x,
+          y: message.payload.y,
+          userId: message.payload.userId,
+        });
+      }
+      setUsers((prev) => {
+        const newUsers = new Map(prev);
+        const user = newUsers.get(message.payload.userId);
+        if (user) {
+          user.x = message.payload.x;
+          user.y = message.payload.y;
+          newUsers.set(message.payload.userId, user);
+        }
+        return newUsers;
+      });
+    }
+
+    function joined() {
+      const x = message.payload.x;
+      const y = message.payload.y;
+      const userId = message.payload.userId;
+      const username = message.payload.username;
+
+      if (username === getEmailFromToken(token)) {
+        setCurrentUserLocalStorage({ x: 0, y: 0, userId, username });
+
+        const client = new Client({
+          webSocketFactory: () => new SockJS("http://localhost:5457/ws"),
+          reconnectDelay: 5000,
+          heartbeatIncoming: 4000,
+          heartbeatOutgoing: 4000,
+        });
+
+        client.onConnect = (frame) => {
+          const username = getEmailFromToken(params.token);
+
+          client.subscribe(`/user/${username}/queue/messages`, (message) => {
+            const parsedMessage = JSON.parse(message.body);
+
+            console.log(
+              "------------------------------------------------------------------"
+            );
+            console.log({ parsedMessage });
+
+            handleStompMessage(parsedMessage, token, spaceId);
+          });
+        };
+        client.activate();
+        userStompClientRef.current = client;
       }
 
-      case "PONG":
-        setUsers((prev) => {
-          const newUsers = new Map(prev);
-          const userFromId = message.payload.userFromId;
-          const user = newUsers.get(userFromId) || {};
-          const fromX = message.payload.fromX;
-          const fromY = message.payload.fromY;
-          const userFrom = message.payload.userFrom;
-          newUsers.set(userFromId, {
-            ...user,
-            x: fromX,
-            y: fromY,
-            username: userFrom,
-          });
-          return newUsers;
-        });
-        break;
+      const newUsers = new Map(users);
+      newUsers.set(userId, { x, y, username });
+      setUsers(newUsers);
+
+      console.log({
+        "currentUser in LocalStorage": currentUserLocalStorage(),
+      });
     }
   };
 
   const handleMove = (newX: number, newY: number) => {
-    if (!currentUser || !stompClientRef.current) return;
+    if (!currentUserLocalStorage().userId || !stompClientRef.current) return;
 
     stompClientRef.current.publish({
       destination: "/app/space/move",
@@ -265,7 +259,7 @@ const Arena = () => {
           y: newY,
           token: "Bearer " + params.token,
           spaceId: params.spaceId,
-          userId: currentUser.userId,
+          userId: currentUserLocalStorage().userId,
         },
       }),
     });
@@ -296,20 +290,34 @@ const Arena = () => {
     }
 
     // Draw current user
-    if (currentUser && currentUser.x !== undefined) {
+    if (
+      currentUserLocalStorage().userId &&
+      currentUserLocalStorage().x !== undefined
+    ) {
       ctx.beginPath();
       ctx.fillStyle = "#FF6B6B";
-      ctx.arc(currentUser.x * 50, currentUser.y * 50, 20, 0, Math.PI * 2);
+      ctx.arc(
+        currentUserLocalStorage().x * 50,
+        currentUserLocalStorage().y * 50,
+        20,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
       ctx.fillStyle = "#000";
       ctx.font = "14px Arial";
       ctx.textAlign = "center";
-      ctx.fillText("You", currentUser.x * 50, currentUser.y * 50 + 40);
+      ctx.fillText(
+        "You",
+        currentUserLocalStorage().x * 50,
+        currentUserLocalStorage().y * 50 + 40
+      );
     }
 
     // Draw other users
     users.forEach((user) => {
       if (!user.x) return;
+      if (user.userId === currentUserLocalStorage().userId) return;
       ctx.beginPath();
       ctx.fillStyle = "#4ECDC4";
       ctx.arc(user.x * 50, user.y * 50, 20, 0, Math.PI * 2);
@@ -319,12 +327,13 @@ const Arena = () => {
       ctx.textAlign = "center";
       ctx.fillText(`User ${user.userId}`, user.x * 50, user.y * 50 + 40);
     });
-  }, [currentUser, users]);
+  }, [users]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (!currentUser) return;
+    if (!currentUserLocalStorage().userId) return;
 
-    const { x, y } = currentUser;
+    const x = currentUserLocalStorage().x;
+    const y = currentUserLocalStorage().y;
     switch (e.key) {
       case "ArrowUp":
         handleMove(x, y - 1);
@@ -349,7 +358,7 @@ const Arena = () => {
         <p className="text-sm text-gray-600">Space ID: {params.spaceId}</p>
         <p className="text-sm text-gray-600">Users: {users.size}</p>
         <p className="text-sm text-gray-600">
-          current User: {currentUser ? 1 : 0}
+          current User: {currentUserLocalStorage().userId ? 1 : 0}
         </p>
       </div>
       <div className="border rounded-lg overflow-hidden">
