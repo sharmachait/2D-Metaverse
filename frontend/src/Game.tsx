@@ -36,10 +36,10 @@ const Arena = () => {
       throw new Error("Failed to decode JWT token: Unknown error");
     }
   }
-  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg3Mzg3NTMsImV4cCI6MTczODgyNTE1MywiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFzaGFybWEiLCJpZCI6IjQ0ZmZkZDIyLTI4ZGMtNGQwMS1hZGRhLTQxNTM4ZTMwNzVjZiJ9.uUzIbu_m_NQFbh05koBVW2JCEKlxTr7Ci9cLtJSsOQI
-  // // 07a4a0b3-7c9d-4fc6-bbe5-ca2ce79761c8
-  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg3Mzg3OTYsImV4cCI6MTczODgyNTE5NiwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFkc2hhcm1hIiwiaWQiOiIzYzU4MGNhMy1lOTBlLTRiNjctYTBjYS0xMWZkZTBjZjIxYTcifQ.qwEePM7mTIfPty2cx1PwPrDOY5G3fTDH-REPpJ4mrHg
-  // http://localhost:5173/?token=eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg3Mzg3OTYsImV4cCI6MTczODgyNTE5NiwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFkc2hhcm1hIiwiaWQiOiIzYzU4MGNhMy1lOTBlLTRiNjctYTBjYS0xMWZkZTBjZjIxYTcifQ.qwEePM7mTIfPty2cx1PwPrDOY5G3fTDH-REPpJ4mrHg&spaceId=07a4a0b3-7c9d-4fc6-bbe5-ca2ce79761c8
+  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg4MTA1ODAsImV4cCI6MTczODg5Njk4MCwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFzaGFybWEiLCJpZCI6IjJhYmU2NGJiLWQwNGMtNDI4ZC05Y2M3LTM5NjI2NTA4NzViOSJ9.ykS6ttRFAbCzntGkyUXA2mJghJ-ZR9YFa5x73F2joqU
+  // // 93d9ad1f-232b-40b7-bc05-5823e71991f7
+  // // eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg4MTA2MzYsImV4cCI6MTczODg5NzAzNiwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFuc3lhc2hhcm1hIiwiaWQiOiI4MDY5ZTkxYi04NGIxLTQ0OGEtYmNlZi02ODIyMjU4NzE1ZWQifQ.xp4nQaDe7v4JS5E8xc0-ycxnNKNCsC5RV2OXsmyGSj8
+  // http://localhost:5173/?token=eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzg4MTA1ODAsImV4cCI6MTczODg5Njk4MCwiYXV0aG9yaXRpZXMiOiJST0xFX0FETUlOIiwiZW1haWwiOiJjaGFpdGFueWFzaGFybWEiLCJpZCI6IjJhYmU2NGJiLWQwNGMtNDI4ZC05Y2M3LTM5NjI2NTA4NzViOSJ9.ykS6ttRFAbCzntGkyUXA2mJghJ-ZR9YFa5x73F2joqU&spaceId=93d9ad1f-232b-40b7-bc05-5823e71991f7
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stompClientRef = useRef<Client | null>(null);
   const userStompClientRef = useRef<Client | null>(null);
@@ -73,7 +73,13 @@ const Arena = () => {
           "------------------------------------------------------------------"
         );
         console.log({ params });
-        handleStompMessage(parsedMessage, token, spaceId);
+        handleStompMessage(
+          parsedMessage,
+          token,
+          spaceId,
+          currentUser,
+          setCurrentUser
+        );
       });
       console.log("joining");
 
@@ -99,8 +105,17 @@ const Arena = () => {
       }
     };
   }, []);
-
-  const handleStompMessage = (message, token, spaceId) => {
+  const currentUserRef = useRef<User>({});
+  useEffect(() => {
+    currentUserRef.current = currentUser;
+  }, [currentUser]);
+  const handleStompMessage = (
+    message,
+    token,
+    spaceId,
+    currentUserParam,
+    setCurrentUserParam
+  ) => {
     switch (message.type) {
       case "SPACE_JOINED": {
         const x = message.payload.x;
@@ -115,11 +130,12 @@ const Arena = () => {
           );
           console.log({ "id from payload": userId });
           console.log({ "id from token": getIdFromToken(token) });
-          setCurrentUser({
+          setCurrentUserParam((prev) => ({
             x: 0,
             y: 0,
             userId: userId,
-          });
+            username: username,
+          }));
 
           const client = new Client({
             webSocketFactory: () => new SockJS("http://localhost:5457/ws"),
@@ -140,7 +156,13 @@ const Arena = () => {
                 "------------------------------------------------------------------"
               );
               console.log({ params });
-              handleStompMessage(parsedMessage, token, spaceId);
+              handleStompMessage(
+                parsedMessage,
+                token,
+                spaceId,
+                currentUserParam,
+                setCurrentUser
+              );
             });
           };
           client.activate();
@@ -150,7 +172,7 @@ const Arena = () => {
           newUsers.set(userId, { x, y, username });
           setUsers(newUsers);
         }
-        console.log({ currentUser });
+        console.log({ currentUserParam });
 
         break;
       }
@@ -159,14 +181,15 @@ const Arena = () => {
           "***************************************************************"
         );
 
-        console.log({ "current user id": currentUser.userId });
+        console.log({ "current user id": currentUserRef.current.userId });
         console.log({ "user id from payload": message.payload.userId });
-        if (currentUser.userId === message.payload.userId) {
-          setCurrentUser({
+        if (currentUserRef.current.userId === message.payload.userId) {
+          setCurrentUserParam((prev) => ({
             x: message.payload.x,
             y: message.payload.y,
             userId: message.payload.userId,
-          });
+            username: prev.username,
+          }));
         } else {
           setUsers((prev) => {
             const newUsers = new Map(prev);
@@ -183,9 +206,9 @@ const Arena = () => {
         break;
 
       case "PING": {
-        console.log({ email: getEmailFromToken(params.token) });
+        console.log({ email: getEmailFromToken(token) });
 
-        if (getEmailFromToken(params.token) !== currentUser.username) {
+        if (getEmailFromToken(token) !== currentUserRef.current.username) {
           const userid = localStorage.getItem("wsuserId");
           const user = users.get(userid);
           const x = user.x;
@@ -198,8 +221,8 @@ const Arena = () => {
                 userFor: message.payload.userFor,
                 userFrom: user.username,
                 userFromId: userid,
-                token: "Bearer " + params.token,
-                spaceId: params.spaceId,
+                token: "Bearer " + token,
+                spaceId: spaceId,
                 fromX: x,
                 fromY: y,
               },
